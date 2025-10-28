@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Place Bid - West Automotive LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#3b82f6',
+                        dark: '#0f172a',
+                        light: '#f8fafc'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark text-light">
+    <custom-navbar></custom-navbar>
+    
+    <main class="container mx-auto px-4 py-8 mt-16 max-w-4xl">
+        <div class="bg-slate-800 rounded-xl shadow-xl p-8 border border-slate-700">
+            <div class="text-center mb-8">
+                <i data-feather="dollar-sign" class="w-16 h-16 text-primary mx-auto"></i>
+                <h1 class="text-3xl font-bold text-primary mt-4">Place New Bid</h1>
+                <p class="text-slate-400 mt-2">Enter vehicle details and your maximum bid amount</p>
+            </div>
+            
+            <form id="bid-form" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="year" class="block text-sm font-medium text-slate-300 mb-2">Year</label>
+                        <input type="number" id="year" min="1990" max="2024" required 
+                               class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="make" class="block text-sm font-medium text-slate-300 mb-2">Make</label>
+                        <input type="text" id="make" required 
+                               class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                    </div>
+                    
+                    <div>
+                        <label for="model" class="block text-sm font-medium text-slate-300 mb-2">Model</label>
+                        <input type="text" id="model" required 
+                               class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="max-bid" class="block text-sm font-medium text-slate-300 mb-2">Maximum Bid Amount ($)</label>
+                    <input type="number" id="max-bid" min="1000" step="100" required 
+                           class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <p class="text-slate-400 text-sm mt-2">Note: Bids over $2,500 require a 10% refundable deposit</p>
+                </div>
+                
+                <div id="deposit-info" class="bg-slate-900 p-4 rounded-lg border border-slate-700 hidden">
+                    <div class="flex items-center mb-2">
+                        <i data-feather="info" class="w-5 h-5 text-secondary mr-2"></i>
+                        <h4 class="font-semibold text-secondary">Deposit Required</h4>
+                    </div>
+                    <p class="text-slate-300 text-sm">Your bid qualifies for a refundable deposit of <span id="deposit-amount" class="font-semibold">$0</span> (10% of your bid amount). This deposit will be refunded if you don't win the auction.</p>
+                </div>
+                
+                <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
+                    <div class="flex items-center mb-2">
+                        <i data-feather="credit-card" class="w-5 h-5 text-secondary mr-2"></i>
+                        <h4 class="font-semibold text-secondary">Service Fee</h4
+</body>
+</html>

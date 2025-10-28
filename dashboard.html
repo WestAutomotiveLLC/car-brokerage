@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Lots - West Automotive LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#3b82f6',
+                        dark: '#0f172a',
+                        light: '#f8fafc'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark text-light">
+    <custom-navbar></custom-navbar>
+    
+    <main class="container mx-auto px-4 py-8 mt-16">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-primary">My Lots</h1>
+            <a href="bid.html" class="bg-primary hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center">
+                <i data-feather="plus" class="w-5 h-5 mr-2"></i>
+                Place New Bid
+            </a>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="bids-container">
+            <!-- Bids will be loaded dynamically -->
+        </div>
+        
+        <div id="empty-state" class="text-center py-16 hidden">
+            <i data-feather="car" class="w-16 h-16 text-slate-500 mx-auto mb-4"></i>
+            <h3 class="text-xl font-semibold text-slate-400 mb-2">No active bids</h3>
+            <p class="text-slate-500 mb-6">Get started by placing your first bid on a vehicle</p>
+            <a href="bid.html" class="bg-primary hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200 inline-flex items-center">
+                <i data-feather="plus" class="w-4 h-4 mr-2"></i>
+                Place New Bid
+            </a>
+        </div>
+    </main>
+
+    <script src="components/navbar.js"></script>
+    <script src="components/bid-card.js"></script>
+    <script src="script.js"></script>
+    <script>
+        feather.replace();
+        // Simulated bid data - in production, this would come from Supabase
+        const bids = [
+            {
+                id: 1,
+                vehicle: '2019 Toyota Tacoma',
+                maxBid: 18500,
+                status: 'Pending',
+                deposit: 1850,
+                serviceFee: 215,
+                date: '2024-01-15'
+            },
+            {
+                id: 2,
+                vehicle: '2021 Honda Civic',
+                maxBid: 22000,
+                status: 'Won',
+                deposit: 2200,
+                serviceFee: 215,
+                date: '2024-01-10'
+            },
+            {
+                id: 3,
+                vehicle: '2018 Ford F-150',
+                maxBid: 19500,
+                status: 'Lost',
+                deposit: 1950,
+                serviceFee: 215,
+                date: '2024-01-05'
+            }
+        ];
+        
+        const bidsContainer = document.getElementById('bids-container');
+        const emptyState = document.getElementById('empty-state');
+        
+        if (bids.length === 0) {
+            emptyState.classList.remove('hidden');
+        } else {
+            bids.forEach(bid => {
+                const bidCard = document.createElement('bid-card');
+                bidCard.setAttribute('data', JSON.stringify(bid));
+                bidsContainer.appendChild(bidCard);
+            });
+        }
+    </script>
+</body>
+</html>
