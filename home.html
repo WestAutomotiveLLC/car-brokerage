@@ -1,14 +1,12 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>West Automotive LLC - Automotive Brokerage</title>
-    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-    <script src="https://unpkg.com/feather-icons"></script>
+    <title>West Automotive Brokerage - Car Auction Broker</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -17,124 +15,209 @@
                     colors: {
                         primary: '#1e40af',
                         secondary: '#3b82f6',
+                        accent: '#dc2626',
                         dark: '#0f172a',
-                        light: '#f8fafc'
+                        light: '#f8fafc',
+                        gray: {
+                            100: '#f7fafc',
+                            200: '#edf2f7',
+                            300: '#e5e7eb',
+                            400: '#cbd5e1',
+                            500: '#94a3b8',
+                            600: '#64748b',
+                            700: '#475569',
+                            800: '#334155',
+                            900: '#1e293b'
+                        }
                     }
                 }
             }
         }
     </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e40af 100%);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .shadow-glow {
+            box-shadow: 0 0 50px rgba(59, 130, 246, 0.15);
+        }
+
+        .hover-lift {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hover-lift:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        .spanish-text {
+            color: #94a3b8;
+            font-style: italic;
+            font-size: 0.95em;
+        }
+
+        .divider {
+            color: #475569;
+            margin: 0 8px;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #dc2626 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
 </head>
-<body class="bg-dark text-light">
-    <header class="fixed top-0 w-full bg-slate-900/95 backdrop-blur-sm border-b border-slate-700 z-50">
-        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-            <div class="flex items-center">
-                <i data-feather="car" class="w-8 h-8 text-primary mr-3"></i>
-                <h1 class="text-xl font-bold text-primary">West Automotive LLC</h1>
-            </div>
-            <a href="index.html" class="bg-primary hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200">
-                Sign In
-            </a>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">West <span>Automotive</span> Brokerage</div>
+        <div class="auth-buttons">
+            <button class="btn btn-signin" onclick="showSignIn()">Sign Up <span class="es">Registrarse</span></button>
+            <button class="btn btn-login" onclick="showLogin()">Login <span class="es">Iniciar sesión</span></button>
         </div>
-    </header>
+    </div>
 
-    <main class="pt-20">
-        <!-- Hero Section -->
-        <section class="relative py-20">
-            <div class="container mx-auto px-4 text-center">
-                <div class="max-w-3xl mx-auto">
-                    <h2 class="text-5xl font-bold text-primary mb-6">Automotive Brokerage</h2>
-                    <p class="text-2xl text-secondary mb-8">Find Your Dream Car. Bid with Confidence.</p>
-                    <div class="bg-primary/20 p-6 rounded-xl border border-primary/30 mb-8">
-                        <p class="text-xl font-semibold text-white">✨ Only Pay If You Win ✨</p>
-                    </div>
-                    <p class="text-slate-300 text-lg mb-8">
-                        Join thousands of satisfied customers who trust West Automotive LLC for their vehicle bidding needs. 
-                        Our transparent process ensures you only pay when you successfully win your desired vehicle.
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                        <a href="bid.html" class="bg-primary hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-200 text-lg">
-                            Start Bidding
-                        </a>
-                        <a href="signup.html" class="border border-primary text-primary hover:bg-primary/10 font-semibold py-3 px-8 rounded-lg transition duration-200 text-lg">
-                            Create Account
-                        </a>
-                    </div>
-                </div>
+    <!-- Hero Section -->
+    <div class="hero">
+        <h1>You <span class="highlight">Don't Pay</span> Anything Unless You Win 
+            <br><span class="es">No pagas nada a menos que ganes</span>
+        </h1>
+        <p class="tagline">
+            Bid on your dream car with zero risk. Our expert brokers handle the auctions while you save money. 
+            <br><span class="es">Oferta por tu auto soñado sin riesgo. Nuestros expertos manejan la subasta mientras tú ahorras dinero.</span>
+        </p>
+
+        <!-- Features -->
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🚗</div>
+                <h3>Zero Upfront Cost <span class="es">Sin costo inicial</span></h3>
+                <p>No fees until you win the auction. Bid with confidence. 
+                    <br><span class="es">Sin tarifas hasta que ganes la subasta. Oferta con confianza.</span>
+                </p>
             </div>
-        </section>
-
-        <!-- Features Section -->
-        <section class="py-20 bg-slate-800">
-            <div class="container mx-auto px-4">
-                <h3 class="text-3xl font-bold text-primary text-center mb-12">Why Choose Us?</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="text-center p-6 bg-slate-900 rounded-xl border border-slate-700">
-                        <i data-feather="shield" class="w-12 h-12 text-secondary mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold text-white mb-3">Secure Bidding</h4>
-                        <p class="text-slate-300">Your bids are protected with bank-level security and transparent pricing.</p>
-                    </div>
-                    <div class="text-center p-6 bg-slate-900 rounded-xl border border-slate-700">
-                        <i data-feather="dollar-sign" class="w-12 h-12 text-secondary mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold text-white mb-3">No Upfront Fees</h4>
-                        <p class="text-slate-300">Pay only when you win. No hidden charges or subscription fees.</p>
-                    </div>
-                    <div class="text-center p-6 bg-slate-900 rounded-xl border border-slate-700">
-                        <i data-feather="users" class="w-12 h-12 text-secondary mx-auto mb-4"></i>
-                        <h4 class="text-xl font-semibold text-white mb-3">Expert Brokers</h4>
-                        <p class="text-slate-300">Our experienced team handles negotiations and ensures the best deals.</p>
-                    </div>
-                </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏆</div>
+                <h3>Expert Brokers <span class="es">Corredores expertos</span></h3>
+                <p>Professional buyers with years of auction experience.
+                    <br><span class="es">Compradores profesionales con años de experiencia en subastas.</span>
+                </p>
             </div>
-        </section>
-
-        <!-- How It Works -->
-        <section class="py-20">
-            <div class="container mx-auto px-4">
-                <h3 class="text-3xl font-bold text-primary text-center mb-12">How It Works</h3>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <div class="text-center">
-                        <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span class="text-2xl font-bold text-white">1</span>
-                        </div>
-                        <h4 class="text-lg font-semibold text-white mb-2">Create Account</h4>
-                        <p class="text-slate-300">Sign up and complete your profile in minutes.</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span class="text-2xl font-bold text-white">2</span>
-                        </div>
-                        <h4 class="text-lg font-semibold text-white mb-2">Place Your Bid</h4>
-                        <p class="text-slate-300">Set your maximum bid for the vehicle you want.</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span class="text-2xl font-bold text-white">3</span>
-                        </div>
-                        <h4 class="text-lg font-semibold text-white mb-2">We Negotiate</h4>
-                        <p class="text-slate-300">Our brokers work to get you the best possible deal.</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span class="text-2xl font-bold text-white">4</span>
-                        </div>
-                        <h4 class="text-lg font-semibold text-white mb-2">Pay Only If You Win</h4>
-                        <p class="text-slate-300">Complete payment only when you successfully win the vehicle.</p>
-                    </div>
-                </div>
+            <div class="feature-card">
+                <div class="feature-icon">💳</div>
+                <h3>Secure Payments <span class="es">Pagos seguros</span></h3>
+                <p>Stripe-powered secure payment processing.
+                    <br><span class="es">Procesamiento de pagos seguro impulsado por Stripe.</span>
+                </p>
             </div>
-        </section>
-    </main>
-
-    <footer class="bg-slate-900 border-t border-slate-700 py-8">
-        <div class="container mx-auto px-4 text-center">
-            <p class="text-slate-400">© 2024 West Automotive LLC. All rights reserved.</p>
-            <p class="text-slate-500 text-sm mt-2">Automotive Brokerage Services</p>
         </div>
-    </footer>
+    </div>
+
+    <!-- Pricing Section -->
+    <div class="pricing">
+        <h2>Check Out Our Competitive Prices <br><span class="es">Consulta nuestros precios competitivos</span></h2>
+        <div class="price-grid">
+            <div class="price-card">
+                <div class="price-amount">$215</div>
+                <div class="price-desc">Flat Fee Per Car <br><span class="es">Tarifa fija por vehículo</span></div>
+                <p>Only charged when you win the auction 
+                    <br><span class="es">Solo se cobra cuando ganas la subasta</span>
+                </p>
+            </div>
+            <div class="price-card featured">
+                <div class="price-amount">0%</div>
+                <div class="price-desc">Upfront Cost <br><span class="es">Costo inicial</span></div>
+                <p>No fees to start bidding 
+                    <br><span class="es">Sin tarifas para comenzar a ofertar</span>
+                </p>
+            </div>
+            <div class="price-card">
+                <div class="price-amount">10%</div>
+                <div class="price-desc">Refundable Deposit <br><span class="es">Depósito reembolsable</span></div>
+                <p>For bids over $2,500 - fully refundable if you don't win 
+                    <br><span class="es">Para ofertas superiores a $2,500 - totalmente reembolsable si no ganas</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="how-it-works">
+        <h2>How It Works <br><span class="es">Cómo funciona</span></h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Sign Up & Verify <span class="es">Regístrate y verifica</span></h3>
+                <p>Create your account and verify your identity 
+                    <br><span class="es">Crea tu cuenta y verifica tu identidad</span>
+                </p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Place Your Bid <span class="es">Haz tu oferta</span></h3>
+                <p>Tell us your maximum bid for the vehicle 
+                    <br><span class="es">Dinos tu oferta máxima para el vehículo</span>
+                </p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>We Bid For You <span class="es">Ofertamos por ti</span></h3>
+                <p>Our experts handle the auction process 
+                    <br><span class="es">Nuestros expertos manejan el proceso de subasta</span>
+                </p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3>Drive Away <span class="es">Conduce tu nuevo auto</span></h3>
+                <p>Only pay if you win - $215 flat fee 
+                    <br><span class="es">Solo pagas si ganas - tarifa fija de $215</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="cta-section">
+        <h2>Ready to Bid Risk-Free? <br><span class="es">¿Listo para ofertar sin riesgo?</span></h2>
+        <p>Join hundreds of satisfied customers who got their dream cars without the auction stress. 
+            <br><span class="es">Únete a cientos de clientes satisfechos que consiguieron su auto soñado sin el estrés de la subasta.</span>
+        </p>
+        <button class="cta-button" onclick="showSignIn()">
+            Start Bidding Today - No Upfront Cost <br><span class="es">Comienza a ofertar hoy - Sin costo inicial</span>
+        </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>&copy; 2024 West Automotive Brokerage LLC. All rights reserved. 
+            <br><span class="es">Todos los derechos reservados.</span>
+        </p>
+    </div>
 
     <script>
-        feather.replace();
+        function showSignIn() {
+            alert('Sign Up form would appear here!\\n\\nWe would collect:\\n• Name, Email, Phone\\n• Address\\n• ID Verification\\n• Payment Method');
+        }
+
+        function showLogin() {
+            alert('Login form would appear here!\\n\\nEmail and password login for existing users.');
+        }
     </script>
 </body>
 </html>

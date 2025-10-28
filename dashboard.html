@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Lots - West Automotive LLC</title>
+    <title>My Bids - West Automotive LLC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-    <script src="https://unpkg.com/feather-icons"></script>
     <link rel="stylesheet" href="style.css">
     <script>
         tailwind.config = {
@@ -23,85 +22,214 @@
             }
         }
     </script>
+    <style>
+        .english { color: #f8fafc; }
+        .spanish { color: #94a3b8; }
+        .divider { color: #475569; margin: 0 4px; }
+    </style>
 </head>
 <body class="bg-dark text-light">
     <custom-navbar></custom-navbar>
     
-    <main class="container mx-auto px-4 py-8 mt-16">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-primary">My Lots</h1>
-            <a href="bid.html" class="bg-primary hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 flex items-center">
-                <i data-feather="plus" class="w-5 h-5 mr-2"></i>
-                Place New Bid
-            </a>
+    <main class="container mx-auto px-4 py-8 mt-16 max-w-6xl">
+        <div class="bg-slate-800 rounded-xl shadow-xl p-6 border border-slate-700">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold text-primary">
+                    <span class="english">My Bids</span>
+                    <span class="divider">/</span>
+                    <span class="spanish">Mis Ofertas</span>
+                </h1>
+            </div>
+
+            <!-- Bids Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-slate-700">
+                            <th class="text-left py-3 px-4 text-slate-300 font-semibold">
+                                <span class="english">Lot #</span>
+                                <span class="divider">/</span>
+                                <span class="spanish">Lote #</span>
+                            </th>
+                            <th class="text-left py-3 px-4 text-slate-300 font-semibold">
+                                <span class="english">Max Bid</span>
+                                <span class="divider">/</span>
+                                <span class="spanish">Oferta Máx</span>
+                            </th>
+                            <th class="text-left py-3 px-4 text-slate-300 font-semibold">
+                                <span class="english">Status</span>
+                                <span class="divider">/</span>
+                                <span class="spanish">Estado</span>
+                            </th>
+                            <th class="text-left py-3 px-4 text-slate-300 font-semibold">
+                                <span class="english">Deposit</span>
+                                <span class="divider">/</span>
+                                <span class="spanish">Depósito</span>
+                            </th>
+                            <th class="text-left py-3 px-4 text-slate-300 font-semibold">
+                                <span class="english">Actions</span>
+                                <span class="divider">/</span>
+                                <span class="spanish">Acciones</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Bid 1 -->
+                        <tr class="border-b border-slate-700 hover:bg-slate-750">
+                            <td class="py-3 px-4">
+                                <div class="font-mono text-white">LOT-458712</div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="text-white font-semibold">$3,200</div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-300">
+                                    <span class="english">Pending</span>
+                                    <span class="divider">/</span>
+                                    <span class="spanish">Pendiente</span>
+                                </span>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="text-green-400 font-semibold">$320</div>
+                                <div class="text-xs text-slate-400">
+                                    <span class="english">Refundable</span>
+                                    <span class="divider">/</span>
+                                    <span class="spanish">Reembolsable</span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <a href="place-bid.html" class="inline-flex items-center text-primary hover:text-blue-400 text-sm">
+                                    <i data-feather="edit" class="w-4 h-4 mr-1"></i>
+                                    <span class="english">Edit</span>
+                                    <span class="divider">/</span>
+                                    <span class="spanish">Editar</span>
+                                </a>
+                            </td>
+                        </tr>
+
+                        <!-- Bid 2 -->
+                        <tr class="border-b border-slate-700 hover:bg-slate-750">
+                            <td class="py-3 px-4">
+                                <div class="font-mono text-white">LOT-389245</div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="text-white font-semibold">$2,100</div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-300">
+                                    <span class="english">Won</span>
+                                    <span class="divider">/</span>
+                                    <span class="spanish">Ganada</span>
+                                </span>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="text-slate-400 font-semibold">-</div>
+                                <div class="text-xs text-slate-400">
+                                    <span class="english">No deposit</span>
+                                    <span class="divider">/</span>
+                                    <span class="spanish">Sin depósito</span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <a href="place-bid.html" class="inline-flex items-center text-primary hover:text-blue-400 text-sm">
+                                    <i data-feather="edit" class="w-4 h-4 mr-1"></i>
+                                    <span class="english">Edit</span>
+                                    <span class="divider">/</span>
+                                    <span class="spanish">Editar</span>
+                                </a>
+                            </td>
+                        </tr>
+
+                        <!-- Bid 3 -->
+                        <tr class="border-b border-slate-700 hover:bg-slate-750">
+                            <td class="py-3 px-4">
+                                <div class="font-mono text-white">LOT-567891</div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="text-white font-semibold">$4,500</div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-300">
+                                    <span class="english">Lost</span>
+                                    <span class="divider">/</span>
+                                    <span class="spanish">Perdida</span>
+                                </span>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="text-green-400 font-semibold">$450</div>
+                                <div class="text-xs text-slate-400">
+                                    <span class="english">Refunded</span>
+                                    <span class="divider">/</span>
+                                    <span class="spanish">Reembolsado</span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <a href="place-bid.html" class="inline-flex items-center text-primary hover:text-blue-400 text-sm">
+                                    <i data-feather="edit" class="w-4 h-4 mr-1"></i>
+                                    <span class="english">Edit</span>
+                                    <span class="divider">/</span>
+                                    <span class="spanish">Editar</span>
+                                </a>
+                            </td>
+                        </tr>
+
+                        <!-- Bid 4 -->
+                        <tr class="hover:bg-slate-750">
+                            <td class="py-3 px-4">
+                                <div class="font-mono text-white">LOT-623478</div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="text-white font-semibold">$1,800</div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-300">
+                                    <span class="english">Pending</span>
+                                    <span class="divider">/</span>
+                                    <span class="spanish">Pendiente</span>
+                                </span>
+                            </td>
+                            <td class="py-3 px-4">
+                                <div class="text-slate-400 font-semibold">-</div>
+                                <div class="text-xs text-slate-400">
+                                    <span class="english">No deposit</span>
+                                    <span class="divider">/</span>
+                                    <span class="spanish">Sin depósito</span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <a href="place-bid.html" class="inline-flex items-center text-primary hover:text-blue-400 text-sm">
+                                    <i data-feather="edit" class="w-4 h-4 mr-1"></i>
+                                    <span class="english">Edit</span>
+                                    <span class="divider">/</span>
+                                    <span class="spanish">Editar</span>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- New Bid Button -->
+            <div class="text-center mt-6 pt-6 border-t border-slate-700">
+                <a href="place-bid.html" class="inline-flex items-center bg-primary hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                    <i data-feather="plus" class="w-4 h-4 mr-2"></i>
+                    <span class="english">Place New Bid</span>
+                    <span class="divider">/</span>
+                    <span class="spanish">Hacer Nueva Oferta</span>
+                </a>
+            </div>
         </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="bids-container">
-            <!-- Bids will be loaded dynamically -->
-        </div>
-        
-        <div id="empty-state" class="text-center py-16 hidden">
-            <i data-feather="car" class="w-16 h-16 text-slate-500 mx-auto mb-4"></i>
-            <h3 class="text-xl font-semibold text-slate-400 mb-2">No active bids</h3>
-            <p class="text-slate-500 mb-6">Get started by placing your first bid on a vehicle</p>
-            <a href="bid.html" class="bg-primary hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200 inline-flex items-center">
-                <i data-feather="plus" class="w-4 h-4 mr-2"></i>
-                Place New Bid
-            </a>
+
+        <div class="text-center mt-8 text-sm">
+            <p>
+                <span class="english text-slate-500">© 2024 West Automotive LLC. All rights reserved.</span>
+            </p>
         </div>
     </main>
-    <script src="components/navbar.js"></script>
-    <script src="components/bid-card.js"></script>
-    <script src="script.js"></script>
-<script>
+
+    <script>
+        // Initialize Feather Icons
         feather.replace();
-        // Simulated bid data - in production, this would come from Supabase
-        const bids = [
-            {
-                id: 1,
-                vehicle: '2019 Toyota Tacoma',
-                maxBid: 18500,
-                status: 'Pending',
-                deposit: 1850,
-                serviceFee: 215,
-                date: '2024-01-15'
-            },
-            {
-                id: 2,
-                vehicle: '2021 Honda Civic',
-                maxBid: 22000,
-                status: 'Won',
-                deposit: 2200,
-                serviceFee: 215,
-                date: '2024-01-10'
-            },
-            {
-                id: 3,
-                vehicle: '2018 Ford F-150',
-                maxBid: 19500,
-                status: 'Lost',
-                deposit: 1950,
-                serviceFee: 215,
-                date: '2024-01-05'
-            }
-        ];
-        
-        const bidsContainer = document.getElementById('bids-container');
-        const emptyState = document.getElementById('empty-state');
-        
-        if (bids.length === 0) {
-            emptyState.classList.remove('hidden');
-        } else {
-            bids.forEach(bid => {
-                const bidCard = document.createElement('bid-card');
-                bidCard.setAttribute('data', JSON.stringify(bid));
-                bidsContainer.appendChild(bidCard);
-            });
-        }
     </script>
-    <div class="text-center mt-12 text-slate-500 text-sm">
-        <p>© 2024 West Automotive LLC. All rights reserved.</p>
-        <p class="text-slate-500 mt-1"><a href="home.html" class="text-secondary hover:underline">Return to Home</a></p>
-    </div>
 </body>
 </html>
