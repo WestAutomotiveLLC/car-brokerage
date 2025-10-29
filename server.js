@@ -1,32 +1,44 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Hardcoded Supabase credentials
-const SUPABASE_URL = 'https://xjbatcwgenoprbgouiyq.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqYmF0Y3dnZW5vcHJiZ291aXlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3NDU4MjAsImV4cCI6MjA3NzMyMTgyMH0.A9Ij8pTsy-BQhSjks5Hrfp1cDsWNBVbvwlt2LoFE4D4';
+// Check for required environment variables
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY || !process.env.STRIPE_SECRET_KEY) {
+  console.error('❌ Missing required environment variables');
+  console.error('SUPABASE_URL:', process.env.SUPABASE_URL ? 'Set' : 'Missing');
+  console.error('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'Set' : 'Missing');
+  console.error('STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? 'Set' : 'Missing');
+  process.exit(1);
+}
 
 // Supabase client
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
 console.log('✅ Supabase client initialized');
+console.log('💳 Stripe client initialized');
 console.log('🚗 West Automotive Brokerage server running on port', PORT);
-console.log('📊 Supabase connected:', SUPABASE_URL);
+console.log('📊 Supabase connected:', process.env.SUPABASE_URL ? 'Yes' : 'No');
+console.log('💳 Stripe connected:', process.env.STRIPE_SECRET_KEY ? 'Yes' : 'No');
 console.log('📁 Current directory:', __dirname);
 console.log('🌐 Live at: https://car-brokerage.onrender.com');
 
 // Function to find HTML files in multiple locations
 function findHTMLFile(filename) {
   const possiblePaths = [
-    path.join(__dirname, filename),           // Same directory as server.js
-    path.join(__dirname, '..', filename),     // One level up
-    path.join(__dirname, '../src', filename), // In src folder
-    path.join(__dirname, '../../', filename), // Two levels up
-    path.join(process.cwd(), filename)        // Current working directory
+    path.join(__dirname, filename),
+    path.join(__dirname, '..', filename),
+    path.join(__dirname, '../src', filename),
+    path.join(__dirname, '../../', filename),
+    path.join(process.cwd(), filename)
   ];
   
   for (const filePath of possiblePaths) {
@@ -49,7 +61,6 @@ app.use(express.json());
 // Health check
 app.get('/api/health', async (req, res) => {
   try {
-    // Test file locations
     const indexFound = findHTMLFile('index.html');
     const placeBidFound = findHTMLFile('place-bid.html');
     const myBidsFound = findHTMLFile('my-bids.html');
@@ -58,6 +69,7 @@ app.get('/api/health', async (req, res) => {
       status: 'OK', 
       message: 'West Automotive API running',
       supabase: 'Connected',
+      stripe: 'Connected',
       files: {
         index: !!indexFound,
         placeBid: !!placeBidFound,
@@ -73,59 +85,85 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Serve HTML pages with dynamic file finding
-app.get('/', (req, res) => {
-  const filePath = findHTMLFile('index.html');
-  if (filePath) {
-    res.sendFile(filePath);
-  } else {
-    res.status(404).send(`
-      <html>
-        <body>
-          <h1>West Automotive Brokerage</h1>
-          <p>index.html not found. Please check your file structure.</p>
-          <p>Current directory: ${__dirname}</p>
-        </body>
-      </html>
-    `);
+// Create Stripe payment intent
+app.post('/api/create-payment-intent', async (req, res) => {
+  try {
+    const { amount, bid_id, user_id } = req.body;
+    
+    console.log('Creating payment intent for amount:', amount, 'bid:', bid_id);
+    
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100),
+      currency: 'usd',
+      automatic_payment_methods: {
+        enabled: true,
+      },
+      metadata: {
+        bid_id: bid_id,
+        user_id: user_id,
+        payment_type: 'deposit'
+      }
+    });
+
+    console.log('Payment intent created:', paymentIntent.id);
+
+    res.json({
+      success: true,
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id
+    });
+  } catch (error) {
+    console.error('Stripe error:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
   }
 });
 
-app.get('/place-bid', (req, res) => {
-  const filePath = findHTMLFile('place-bid.html');
-  if (filePath) {
-    res.sendFile(filePath);
-  } else {
-    res.status(404).send(`
-      <html>
-        <body>
-          <h1>Place Bid - Page Not Found</h1>
-          <p>place-bid.html not found. Please check your file structure.</p>
-          <a href="/">Return to Home</a>
-        </body>
-      </html>
-    `);
+// Confirm payment and update bid
+app.post('/api/confirm-payment', async (req, res) => {
+  try {
+    const { paymentIntentId, bid_id } = req.body;
+    
+    console.log('Confirming payment:', paymentIntentId, 'for bid:', bid_id);
+    
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    
+    if (paymentIntent.status === 'succeeded') {
+      const { data, error } = await supabase
+        .from('bids')
+        .update({ 
+          deposit_paid: true,
+          status: 'active'
+        })
+        .eq('id', bid_id)
+        .select();
+
+      if (error) throw error;
+
+      console.log('Payment confirmed and bid updated:', bid_id);
+
+      res.json({
+        success: true,
+        message: 'Payment confirmed and bid activated!',
+        bid: data[0]
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: 'Payment not completed. Status: ' + paymentIntent.status
+      });
+    }
+  } catch (error) {
+    console.error('Payment confirmation error:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
   }
 });
 
-app.get('/my-bids', (req, res) => {
-  const filePath = findHTMLFile('my-bids.html');
-  if (filePath) {
-    res.sendFile(filePath);
-  } else {
-    res.status(404).send(`
-      <html>
-        <body>
-          <h1>My Bids - Page Not Found</h1>
-          <p>my-bids.html not found. Please check your file structure.</p>
-          <a href="/">Return to Home</a>
-        </body>
-      </html>
-    `);
-  }
-});
-
-// Keep all your existing API routes (signup, login, bids, etc.)
 // User Registration
 app.post('/api/auth/signup', async (req, res) => {
   try {
@@ -275,7 +313,7 @@ app.post('/api/bids', async (req, res) => {
           max_bid, 
           deposit_amount,
           notes,
-          status: 'pending'
+          status: deposit_amount > 0 ? 'pending_payment' : 'active'
         }
       ])
       .select();
@@ -289,7 +327,7 @@ app.post('/api/bids', async (req, res) => {
     
     res.json({ 
       success: true, 
-      message: 'Bid placed successfully!',
+      message: deposit_amount > 0 ? 'Bid created! Please pay the deposit to activate.' : 'Bid placed successfully!',
       bid: data[0],
       requires_deposit: deposit_amount > 0,
       deposit_amount: deposit_amount
@@ -302,10 +340,128 @@ app.post('/api/bids', async (req, res) => {
   }
 });
 
+// Get user's bids
+app.get('/api/bids/:user_id', async (req, res) => {
+  try {
+    const { user_id } = req.params;
+    
+    const { data, error } = await supabase
+      .from('bids')
+      .select('*')
+      .eq('user_id', user_id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      return res.status(400).json({ 
+        success: false,
+        error: error.message 
+      });
+    }
+    
+    res.json({ 
+      success: true,
+      bids: data 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error' 
+    });
+  }
+});
+
+// Get all bids (for admin view)
+app.get('/api/bids', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('bids')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      return res.status(400).json({ 
+        success: false,
+        error: error.message 
+      });
+    }
+    
+    res.json({ 
+      success: true,
+      bids: data 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error' 
+    });
+  }
+});
+
+// Payment success page
+app.get('/payment-success', (req, res) => {
+  const bidId = req.query.bid_id;
+  const paymentSuccess = req.query.payment_intent;
+  
+  if (paymentSuccess && bidId) {
+    res.redirect(`/my-bids?payment_success=true&bid_id=${bidId}`);
+  } else {
+    res.redirect('/my-bids');
+  }
+});
+
+// Serve HTML pages
+app.get('/', (req, res) => {
+  const filePath = findHTMLFile('index.html');
+  if (filePath) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send(`
+      <html>
+        <body>
+          <h1>West Automotive Brokerage</h1>
+          <p>index.html not found. Please check your file structure.</p>
+        </body>
+      </html>
+    `);
+  }
+});
+
+app.get('/place-bid', (req, res) => {
+  const filePath = findHTMLFile('place-bid.html');
+  if (filePath) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send(`
+      <html>
+        <body>
+          <h1>Place Bid - Page Not Found</h1>
+          <p>place-bid.html not found.</p>
+          <a href="/">Return to Home</a>
+        </body>
+      </html>
+    `);
+  }
+});
+
+app.get('/my-bids', (req, res) => {
+  const filePath = findHTMLFile('my-bids.html');
+  if (filePath) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send(`
+      <html>
+        <body>
+          <h1>My Bids - Page Not Found</h1>
+          <p>my-bids.html not found.</p>
+          <a href="/">Return to Home</a>
+        </body>
+      </html>
+    `);
+  }
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log('✅ Server started successfully!');
-  
-  // Test file locations on startup
   console.log('🔍 Searching for HTML files...');
   findHTMLFile('index.html');
   findHTMLFile('place-bid.html');
