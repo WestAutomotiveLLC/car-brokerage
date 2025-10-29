@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const fs = require('fs');
 const session = require('express-session');
 const { createClient } = require('@supabase/supabase-js');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -22,6 +21,12 @@ const supabase = createClient(
 );
 
 console.log('✅ Supabase client initialized');
+console.log('💳 Stripe client initialized');
+console.log('🚗 West Automotive Brokerage server running on port', PORT);
+console.log('📊 Supabase connected:', process.env.SUPABASE_URL ? 'Yes' : 'No');
+console.log('💳 Stripe connected:', process.env.STRIPE_SECRET_KEY ? 'Yes' : 'No');
+console.log('📁 Current directory:', __dirname);
+console.log('🌐 Live at: https://car-brokerage.onrender.com');
 
 // Simple memory store for sessions
 class SimpleMemoryStore {
@@ -421,13 +426,13 @@ app.get('/api/bids/my-bids', requireAuth, async (req, res) => {
 });
 
 // Get all bids (for admin view)
-app.get('/api/bids', async (req, res) => {
+app.get('/api/admin/bids', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('bids')
       .select(`
         *,
-        users (email, full_name)
+        users (email, full_name, phone)
       `)
       .order('created_at', { ascending: false });
 
@@ -450,34 +455,84 @@ app.get('/api/bids', async (req, res) => {
   }
 });
 
-// Update bid status (for admin)
-app.patch('/api/bids/:bid_id', async (req, res) => {
+// Get all users with their bids (for admin)
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (usersError) throw usersError;
+
+    // Get bids for each user
+    const usersWithBids = await Promise.all(
+      users.map(async (user) => {
+        const { data: bids, error: bidsError } = await supabase
+          .from('bids')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (bidsError) throw bidsError;
+
+        // Check if user has pending bids that need attention
+        const needsAttention = bids.some(bid => 
+          bid.status === 'pending' || 
+          bid.status === 'winning' ||
+          bid.updated_at > new Date(Date.now() - 24 * 60 * 60 * 1000) // Updated in last 24 hours
+        );
+
+        return {
+          ...user,
+          bids: bids || [],
+          needs_attention: needsAttention,
+          total_bids: bids.length,
+          active_bids: bids.filter(b => b.status === 'pending' || b.status === 'winning').length
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      users: usersWithBids
+    });
+  } catch (error) {
+    console.error('Admin users error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Update bid status (admin only)
+app.patch('/api/admin/bids/:bid_id', async (req, res) => {
   try {
     const { bid_id } = req.params;
     const { status } = req.body;
-    
+
     const { data, error } = await supabase
       .from('bids')
-      .update({ status })
+      .update({ 
+        status: status,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', bid_id)
       .select();
 
-    if (error) {
-      return res.status(400).json({ 
-        success: false,
-        error: error.message 
-      });
-    }
-    
-    res.json({ 
+    if (error) throw error;
+
+    res.json({
       success: true,
-      message: 'Bid status updated',
+      message: `Bid status updated to ${status}`,
       bid: data[0]
     });
   } catch (error) {
-    res.status(500).json({ 
+    console.error('Update bid status error:', error);
+    res.status(500).json({
       success: false,
-      error: 'Internal server error' 
+      error: 'Internal server error'
     });
   }
 });
@@ -495,7 +550,17 @@ app.get('/my-bids', (req, res) => {
   res.sendFile(path.join(__dirname, 'my-bids.html'));
 });
 
+// Admin login page
+app.get('/admin-login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin-login.html'));
+});
+
+// Admin dashboard
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
 app.listen(PORT, '0.0.0.0', () => {
-  console.log('🚗 West Automotive Brokerage server running on port', PORT);
+  console.log('✅ Server started successfully!');
   console.log('🌐 Live at: https://car-brokerage.onrender.com');
 });
