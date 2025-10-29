@@ -15,11 +15,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 console.log('✅ Supabase client initialized');
 console.log('🚗 West Automotive Brokerage server running on port', PORT);
 console.log('📊 Supabase connected:', SUPABASE_URL);
-console.log('📁 Serving files from:', __dirname);
+console.log('📁 Serving files from:', path.join(__dirname, '..'));
 console.log('🌐 Live at: https://car-brokerage.onrender.com');
 
-// Middleware - Serve static files from current directory
-app.use(express.static(__dirname));
+// Middleware - Serve static files from root directory (one level up)
+app.use(express.static(path.join(__dirname, '..')));
 app.use(express.json());
 
 // Health check
@@ -316,23 +316,23 @@ app.get('/api/bids', async (req, res) => {
   }
 });
 
-// Serve HTML pages
+// Serve HTML pages from root directory (one level up)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, '../index.html'));
 });
 
 app.get('/place-bid', (req, res) => {
-  res.sendFile(path.join(__dirname, 'place-bid.html'));
+  res.sendFile(path.join(__dirname, '../place-bid.html'));
 });
 
 app.get('/my-bids', (req, res) => {
-  res.sendFile(path.join(__dirname, 'my-bids.html'));
+  res.sendFile(path.join(__dirname, '../my-bids.html'));
 });
 
 // Catch-all route for any other HTML files
 app.get('*.html', (req, res) => {
   const fileName = req.path.substring(1);
-  res.sendFile(path.join(__dirname, fileName));
+  res.sendFile(path.join(__dirname, '..', fileName));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
