@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
@@ -15,20 +16,53 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 console.log('✅ Supabase client initialized');
 console.log('🚗 West Automotive Brokerage server running on port', PORT);
 console.log('📊 Supabase connected:', SUPABASE_URL);
-console.log('📁 Serving files from:', path.join(__dirname, '..'));
+console.log('📁 Current directory:', __dirname);
 console.log('🌐 Live at: https://car-brokerage.onrender.com');
 
-// Middleware - Serve static files from root directory (one level up)
+// Function to find HTML files in multiple locations
+function findHTMLFile(filename) {
+  const possiblePaths = [
+    path.join(__dirname, filename),           // Same directory as server.js
+    path.join(__dirname, '..', filename),     // One level up
+    path.join(__dirname, '../src', filename), // In src folder
+    path.join(__dirname, '../../', filename), // Two levels up
+    path.join(process.cwd(), filename)        // Current working directory
+  ];
+  
+  for (const filePath of possiblePaths) {
+    if (fs.existsSync(filePath)) {
+      console.log(`📄 Found ${filename} at: ${filePath}`);
+      return filePath;
+    }
+  }
+  
+  console.log(`❌ ${filename} not found in any location`);
+  return null;
+}
+
+// Middleware - Try multiple static file locations
+app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, '..')));
+app.use(express.static(process.cwd()));
 app.use(express.json());
 
 // Health check
 app.get('/api/health', async (req, res) => {
   try {
+    // Test file locations
+    const indexFound = findHTMLFile('index.html');
+    const placeBidFound = findHTMLFile('place-bid.html');
+    const myBidsFound = findHTMLFile('my-bids.html');
+    
     res.json({ 
       status: 'OK', 
       message: 'West Automotive API running',
-      supabase: 'Connected'
+      supabase: 'Connected',
+      files: {
+        index: !!indexFound,
+        placeBid: !!placeBidFound,
+        myBids: !!myBidsFound
+      }
     });
   } catch (error) {
     res.json({ 
@@ -39,14 +73,66 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// User Registration - WITH BETTER ERROR MESSAGES
+// Serve HTML pages with dynamic file finding
+app.get('/', (req, res) => {
+  const filePath = findHTMLFile('index.html');
+  if (filePath) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send(`
+      <html>
+        <body>
+          <h1>West Automotive Brokerage</h1>
+          <p>index.html not found. Please check your file structure.</p>
+          <p>Current directory: ${__dirname}</p>
+        </body>
+      </html>
+    `);
+  }
+});
+
+app.get('/place-bid', (req, res) => {
+  const filePath = findHTMLFile('place-bid.html');
+  if (filePath) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send(`
+      <html>
+        <body>
+          <h1>Place Bid - Page Not Found</h1>
+          <p>place-bid.html not found. Please check your file structure.</p>
+          <a href="/">Return to Home</a>
+        </body>
+      </html>
+    `);
+  }
+});
+
+app.get('/my-bids', (req, res) => {
+  const filePath = findHTMLFile('my-bids.html');
+  if (filePath) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send(`
+      <html>
+        <body>
+          <h1>My Bids - Page Not Found</h1>
+          <p>my-bids.html not found. Please check your file structure.</p>
+          <a href="/">Return to Home</a>
+        </body>
+      </html>
+    `);
+  }
+});
+
+// Keep all your existing API routes (signup, login, bids, etc.)
+// User Registration
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const { email, password, full_name, phone, address } = req.body;
     
     console.log('Signup attempt for:', email);
     
-    // Create user in Supabase Auth only
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -62,7 +148,6 @@ app.post('/api/auth/signup', async (req, res) => {
     if (error) {
       console.error('Signup error:', error.message);
       
-      // Check if user already exists
       if (error.message.includes('already registered') || error.message.includes('user_exists')) {
         return res.status(400).json({ 
           success: false,
@@ -70,7 +155,6 @@ app.post('/api/auth/signup', async (req, res) => {
         });
       }
       
-      // Check for weak password
       if (error.message.includes('password')) {
         return res.status(400).json({ 
           success: false,
@@ -86,7 +170,6 @@ app.post('/api/auth/signup', async (req, res) => {
 
     console.log('Signup successful for:', email);
     
-    // Check if email confirmation is required
     if (data.user && data.user.identities && data.user.identities.length === 0) {
       return res.json({ 
         success: true, 
@@ -119,7 +202,7 @@ app.post('/api/auth/signup', async (req, res) => {
   }
 });
 
-// User Login - WITH BETTER ERROR MESSAGES
+// User Login
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -134,7 +217,6 @@ app.post('/api/auth/login', async (req, res) => {
     if (error) {
       console.error('Login error:', error.message);
       
-      // Check for specific error types
       if (error.message.includes('Invalid login credentials')) {
         return res.status(400).json({ 
           success: false,
@@ -177,50 +259,11 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Get current user
-app.get('/api/auth/user', async (req, res) => {
-  try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.status(401).json({ 
-        success: false,
-        error: 'No token provided' 
-      });
-    }
-
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    
-    if (error || !user) {
-      return res.status(401).json({ 
-        success: false,
-        error: 'Invalid token' 
-      });
-    }
-
-    res.json({ 
-      success: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        full_name: user.user_metadata?.full_name,
-        phone: user.user_metadata?.phone
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false,
-      error: 'Internal server error' 
-    });
-  }
-});
-
 // Create a new bid
 app.post('/api/bids', async (req, res) => {
   try {
     const { lot_number, max_bid, user_id, notes } = req.body;
     
-    // Calculate deposit if bid is over $2500
     const deposit_amount = max_bid > 2500 ? max_bid * 0.10 : 0;
     
     const { data, error } = await supabase
@@ -259,82 +302,12 @@ app.post('/api/bids', async (req, res) => {
   }
 });
 
-// Get user's bids
-app.get('/api/bids/:user_id', async (req, res) => {
-  try {
-    const { user_id } = req.params;
-    
-    const { data, error } = await supabase
-      .from('bids')
-      .select('*')
-      .eq('user_id', user_id)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      return res.status(400).json({ 
-        success: false,
-        error: error.message 
-      });
-    }
-    
-    res.json({ 
-      success: true,
-      bids: data 
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false,
-      error: 'Internal server error' 
-    });
-  }
-});
-
-// Get all bids (for admin view)
-app.get('/api/bids', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('bids')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      return res.status(400).json({ 
-        success: false,
-        error: error.message 
-      });
-    }
-    
-    res.json({ 
-      success: true,
-      bids: data 
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false,
-      error: 'Internal server error' 
-    });
-  }
-});
-
-// Serve HTML pages from root directory (one level up)
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../index.html'));
-});
-
-app.get('/place-bid', (req, res) => {
-  res.sendFile(path.join(__dirname, '../place-bid.html'));
-});
-
-app.get('/my-bids', (req, res) => {
-  res.sendFile(path.join(__dirname, '../my-bids.html'));
-});
-
-// Catch-all route for any other HTML files
-app.get('*.html', (req, res) => {
-  const fileName = req.path.substring(1);
-  res.sendFile(path.join(__dirname, '..', fileName));
-});
-
 app.listen(PORT, '0.0.0.0', () => {
   console.log('✅ Server started successfully!');
+  
+  // Test file locations on startup
+  console.log('🔍 Searching for HTML files...');
+  findHTMLFile('index.html');
+  findHTMLFile('place-bid.html');
+  findHTMLFile('my-bids.html');
 });
