@@ -12,9 +12,6 @@ const PORT = process.env.PORT || 3000;
 // Check for required environment variables
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY || !process.env.STRIPE_SECRET_KEY) {
   console.error('❌ Missing required environment variables');
-  console.error('SUPABASE_URL:', process.env.SUPABASE_URL ? 'Set' : 'Missing');
-  console.error('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'Set' : 'Missing');
-  console.error('STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? 'Set' : 'Missing');
   process.exit(1);
 }
 
@@ -25,22 +22,16 @@ const supabase = createClient(
 );
 
 console.log('✅ Supabase client initialized');
-console.log('💳 Stripe client initialized');
-console.log('🚗 West Automotive Brokerage server running on port', PORT);
-console.log('📊 Supabase connected:', process.env.SUPABASE_URL ? 'Yes' : 'No');
-console.log('💳 Stripe connected:', process.env.STRIPE_SECRET_KEY ? 'Yes' : 'No');
-console.log('📁 Current directory:', __dirname);
-console.log('🌐 Live at: https://car-brokerage.onrender.com');
 
-// Simple memory store for sessions (production-safe)
+// Simple memory store for sessions
 class SimpleMemoryStore {
   constructor() {
     this.sessions = new Map();
+    this.startCleanup();
   }
 
   get(sid, callback) {
-    const session = this.sessions.get(sid);
-    callback(null, session);
+    callback(null, this.sessions.get(sid));
   }
 
   set(sid, session, callback) {
@@ -53,7 +44,6 @@ class SimpleMemoryStore {
     callback(null);
   }
 
-  // Clean up expired sessions every hour
   startCleanup() {
     setInterval(() => {
       const now = Date.now();
@@ -62,52 +52,51 @@ class SimpleMemoryStore {
           this.sessions.delete(sid);
         }
       }
-    }, 60 * 60 * 1000); // Run every hour
+    }, 60 * 60 * 1000);
   }
 }
 
 const memoryStore = new SimpleMemoryStore();
-memoryStore.startCleanup();
 
-// Session middleware with production-safe store
+// Session middleware
 app.use(session({
-  secret: process.env.FLASK_SECRET_KEY || 'car-brokerage-west-auto-2024-secret-123',
+  secret: process.env.FLASK_SECRET_KEY || 'car-brokerage-secret-123',
   resave: false,
   saveUninitialized: false,
   store: memoryStore,
   cookie: { 
-    maxAge: 60 * 60 * 1000, // 1 hour
+    maxAge: 60 * 60 * 1000,
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true
   }
 }));
-
-// Function to find HTML files in multiple locations
-function findHTMLFile(filename) {
-  const possiblePaths = [
-    path.join(__dirname, filename),
-    path.join(__dirname, '..', filename),
-    path.join(__dirname, '../src', filename),
-    path.join(__dirname, '../../', filename),
-    path.join(process.cwd(), filename)
-  ];
-  
-  for (const filePath of possiblePaths) {
-    if (fs.existsSync(filePath)) {
-      console.log(`📄 Found ${filename} at: ${filePath}`);
-      return filePath;
-    }
-  }
-  
-  console.log(`❌ ${filename} not found in any location`);
-  return null;
-}
 
 // Middleware
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, '..')));
 app.use(express.static(process.cwd()));
 app.use(express.json());
+
+// Helper function to sync user to database
+async function syncUserToDatabase(userData) {
+  const { data, error } = await supabase
+    .from('users')
+    .upsert({
+      id: userData.id,
+      email: userData.email,
+      full_name: userData.full_name,
+      phone: userData.phone,
+      address: userData.address
+    }, {
+      onConflict: 'id'
+    })
+    .select();
+
+  if (error) {
+    console.error('Error syncing user to database:', error);
+  }
+  return data ? data[0] : null;
+}
 
 // Middleware to check if user is logged in
 const requireAuth = (req, res, next) => {
@@ -123,29 +112,12 @@ const requireAuth = (req, res, next) => {
 
 // Health check
 app.get('/api/health', async (req, res) => {
-  try {
-    const indexFound = findHTMLFile('index.html');
-    const placeBidFound = findHTMLFile('place-bid.html');
-    const myBidsFound = findHTMLFile('my-bids.html');
-    
-    res.json({ 
-      status: 'OK', 
-      message: 'West Automotive API running',
-      supabase: 'Connected',
-      stripe: 'Connected',
-      files: {
-        index: !!indexFound,
-        placeBid: !!placeBidFound,
-        myBids: !!myBidsFound
-      }
-    });
-  } catch (error) {
-    res.json({ 
-      status: 'OK', 
-      message: 'West Automotive API running',
-      error: error.message
-    });
-  }
+  res.json({ 
+    status: 'OK', 
+    message: 'West Automotive API running',
+    supabase: 'Connected',
+    stripe: 'Connected'
+  });
 });
 
 // Check auth status
@@ -173,7 +145,7 @@ app.post('/api/bids', requireAuth, async (req, res) => {
       .from('bids')
       .insert([
         { 
-          user_id: user_id, // Keep as string for Supabase Auth
+          user_id: user_id,
           lot_number, 
           max_bid: parseFloat(max_bid), 
           deposit_amount: parseFloat(deposit_amount),
@@ -215,7 +187,7 @@ app.post('/api/create-payment-intent', requireAuth, async (req, res) => {
     const { amount, bid_id, lot_number } = req.body;
     const user_id = req.session.user.id;
     
-    console.log('Creating payment intent for user:', user_id, 'amount:', amount, 'bid:', bid_id);
+    console.log('Creating payment intent for amount:', amount, 'bid:', bid_id);
     
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100),
@@ -318,21 +290,6 @@ app.post('/api/auth/signup', async (req, res) => {
 
     if (error) {
       console.error('Signup error:', error.message);
-      
-      if (error.message.includes('already registered') || error.message.includes('user_exists')) {
-        return res.status(400).json({ 
-          success: false,
-          error: 'User already exists with this email. Please try logging in instead.'
-        });
-      }
-      
-      if (error.message.includes('password')) {
-        return res.status(400).json({ 
-          success: false,
-          error: 'Password is too weak. Please use at least 6 characters.'
-        });
-      }
-      
       return res.status(400).json({ 
         success: false,
         error: error.message 
@@ -341,21 +298,18 @@ app.post('/api/auth/signup', async (req, res) => {
 
     console.log('Signup successful for:', email);
     
-    // Store user in session
-    req.session.user = {
+    // Create user session
+    const userSession = {
       id: data.user.id,
       email: data.user.email,
       full_name: data.user.user_metadata?.full_name,
       phone: data.user.user_metadata?.phone
     };
     
-    if (data.user && data.user.identities && data.user.identities.length === 0) {
-      return res.json({ 
-        success: true, 
-        message: 'User already created. Please check your email to verify your account or try logging in.',
-        user: req.session.user
-      });
-    }
+    // Sync user to database
+    await syncUserToDatabase(userSession);
+    
+    req.session.user = userSession;
     
     res.json({ 
       success: true, 
@@ -385,21 +339,6 @@ app.post('/api/auth/login', async (req, res) => {
 
     if (error) {
       console.error('Login error:', error.message);
-      
-      if (error.message.includes('Invalid login credentials')) {
-        return res.status(400).json({ 
-          success: false,
-          error: 'Invalid email or password. Please try again.'
-        });
-      }
-      
-      if (error.message.includes('Email not confirmed')) {
-        return res.status(400).json({ 
-          success: false,
-          error: 'Please check your email to verify your account before logging in.'
-        });
-      }
-      
       return res.status(400).json({ 
         success: false,
         error: error.message 
@@ -408,13 +347,18 @@ app.post('/api/auth/login', async (req, res) => {
 
     console.log('Login successful for:', email);
     
-    // Store user in session
-    req.session.user = {
+    // Create user session
+    const userSession = {
       id: data.user.id,
       email: data.user.email,
       full_name: data.user.user_metadata?.full_name,
       phone: data.user.user_metadata?.phone
     };
+    
+    // Sync user to database
+    await syncUserToDatabase(userSession);
+    
+    req.session.user = userSession;
     
     res.json({ 
       success: true, 
@@ -454,7 +398,7 @@ app.get('/api/bids/my-bids', requireAuth, async (req, res) => {
     const { data, error } = await supabase
       .from('bids')
       .select('*')
-      .eq('user_id', user_id) // Use string ID directly
+      .eq('user_id', user_id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -481,7 +425,10 @@ app.get('/api/bids', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('bids')
-      .select('*')
+      .select(`
+        *,
+        users (email, full_name)
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -535,73 +482,20 @@ app.patch('/api/bids/:bid_id', async (req, res) => {
   }
 });
 
-// Payment success page
-app.get('/payment-success', (req, res) => {
-  const bidId = req.query.bid_id;
-  const paymentSuccess = req.query.payment_intent;
-  
-  if (paymentSuccess && bidId) {
-    res.redirect(`/my-bids?payment_success=true&bid_id=${bidId}`);
-  } else {
-    res.redirect('/my-bids');
-  }
-});
-
 // Serve HTML pages
 app.get('/', (req, res) => {
-  const filePath = findHTMLFile('index.html');
-  if (filePath) {
-    res.sendFile(filePath);
-  } else {
-    res.status(404).send(`
-      <html>
-        <body>
-          <h1>West Automotive Brokerage</h1>
-          <p>index.html not found. Please check your file structure.</p>
-        </body>
-      </html>
-    `);
-  }
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/place-bid', (req, res) => {
-  const filePath = findHTMLFile('place-bid.html');
-  if (filePath) {
-    res.sendFile(filePath);
-  } else {
-    res.status(404).send(`
-      <html>
-        <body>
-          <h1>Place Bid - Page Not Found</h1>
-          <p>place-bid.html not found.</p>
-          <a href="/">Return to Home</a>
-        </body>
-      </html>
-    `);
-  }
+  res.sendFile(path.join(__dirname, 'place-bid.html'));
 });
 
 app.get('/my-bids', (req, res) => {
-  const filePath = findHTMLFile('my-bids.html');
-  if (filePath) {
-    res.sendFile(filePath);
-  } else {
-    res.status(404).send(`
-      <html>
-        <body>
-          <h1>My Bids - Page Not Found</h1>
-          <p>my-bids.html not found.</p>
-          <a href="/">Return to Home</a>
-        </body>
-      </html>
-    `);
-  }
+  res.sendFile(path.join(__dirname, 'my-bids.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log('✅ Server started successfully!');
-  console.log('🔍 Searching for HTML files...');
-  findHTMLFile('index.html');
-  findHTMLFile('place-bid.html');
-  findHTMLFile('my-bids.html');
+  console.log('🚗 West Automotive Brokerage server running on port', PORT);
+  console.log('🌐 Live at: https://car-brokerage.onrender.com');
 });
