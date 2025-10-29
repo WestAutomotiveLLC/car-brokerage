@@ -130,6 +130,12 @@ def create_payment_intent():
         print(f"Error creating payment intent: {str(e)}")
         return jsonify({'error': str(e)}), 400
 
+@app.route('/reset-db')
+def reset_db():
+    db.drop_all()
+    db.create_all()
+    return "Database reset complete!"
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
