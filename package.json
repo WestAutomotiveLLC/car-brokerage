@@ -2,11 +2,11 @@
   "name": "west-automotive-brokerage",
   "version": "1.0.0",
   "description": "Car brokerage platform",
-  "main": "backend/server.js",
+  "main": "server.js",
   "license": "MIT",
   "scripts": {
-    "start": "node backend/server.js",
-    "dev": "node backend/server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.0",
