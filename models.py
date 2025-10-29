@@ -19,10 +19,7 @@ class Bid(db.Model):
     max_bid = db.Column(db.Float, nullable=False)
     deposit_amount = db.Column(db.Float, default=0)
     service_fee = db.Column(db.Float, default=215)
-    status = db.Column(db.String(20), default='pending')  # pending, winning, outbid, won, lost
+    status = db.Column(db.String(20), default='pending')
     payment_intent_id = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    def __repr__(self):
-        return f'<Bid {self.lot_number} - ${self.max_bid} - {self.status}>'
