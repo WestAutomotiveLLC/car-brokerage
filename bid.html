@@ -167,7 +167,6 @@
             </p>
         </div>
     </main>
-
     <script>
         // Initialize Feather Icons
         feather.replace();
@@ -183,8 +182,8 @@
             
             if (bidAmount > 2500) {
                 const deposit = bidAmount * 0.10;
-                depositAmount.textContent = `$${deposit.toFixed(2)}`;
-                depositAmountEs.textContent = `$${deposit.toFixed(2)}`;
+                depositAmount.textContent = `${deposit.toFixed(2)}`;
+                depositAmountEs.textContent = `${deposit.toFixed(2)}`;
                 depositInfo.classList.remove('hidden');
             } else {
                 depositInfo.classList.add('hidden');
