@@ -6,8 +6,8 @@ from models import db, User, Bid
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-change-this'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bids.db'
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SUPABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize extensions
@@ -17,13 +17,12 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 # Stripe configuration
-stripe.api_key = 'your-stripe-secret-key'  # Change this to your Stripe secret key
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Routes
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -69,7 +68,10 @@ def logout():
 @app.route('/place-bid')
 @login_required
 def place_bid():
-    return render_template('place-bid.html')
+    publishable_key = os.environ.get('STRIPE_PUBLISHABLE_KEY')
+    if not publishable_key:
+        return "Stripe not configured properly", 500
+    return render_template('place-bid.html', stripe_publishable_key=publishable_key)
 
 @app.route('/my-bids')
 @login_required
@@ -103,7 +105,7 @@ def create_payment_intent():
         
         # Create Stripe Payment Intent
         intent = stripe.PaymentIntent.create(
-            amount=int(total_amount * 100),  # Convert to cents
+            amount=int(total_amount * 100),
             currency='usd',
             metadata={
                 'bid_id': bid.id,
@@ -116,7 +118,6 @@ def create_payment_intent():
             },
         )
         
-        # Update bid with payment intent ID
         bid.payment_intent_id = intent.id
         db.session.commit()
         
@@ -128,33 +129,6 @@ def create_payment_intent():
     except Exception as e:
         print(f"Error creating payment intent: {str(e)}")
         return jsonify({'error': str(e)}), 400
-
-@app.route('/webhook', methods=['POST'])
-def stripe_webhook():
-    payload = request.get_data(as_text=True)
-    sig_header = request.headers.get('Stripe-Signature')
-
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, 'your-webhook-signing-secret'  # Change this
-        )
-    except ValueError as e:
-        return 'Invalid payload', 400
-    except stripe.error.SignatureVerificationError as e:
-        return 'Invalid signature', 400
-
-    # Handle payment success
-    if event['type'] == 'payment_intent.succeeded':
-        payment_intent = event['data']['object']
-        bid_id = payment_intent['metadata']['bid_id']
-        
-        # Update bid status
-        bid = Bid.query.get(bid_id)
-        if bid:
-            bid.status = 'pending'  # Ready for you to place on Copart
-            db.session.commit()
-
-    return jsonify({'success': True})
 
 if __name__ == '__main__':
     with app.app_context():
