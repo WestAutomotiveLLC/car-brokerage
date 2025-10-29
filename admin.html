@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - West Automotive LLC</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .attention-alert {
+            animation: pulse 2s infinite;
+            border-left: 4px solid #dc3545;
+        }
+        @keyframes pulse {
+            0% { background-color: rgba(220, 53, 69, 0.1); }
+            50% { background-color: rgba(220, 53, 69, 0.2); }
+            100% { background-color: rgba(220, 53, 69, 0.1); }
+        }
+        .user-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .user-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            font-size: 0.75em;
+        }
+        .bid-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .bid-details.show {
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="row bg-dark text-white p-3">
+            <div class="col">
+                <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+                <p class="mb-0">West Automotive LLC - Bid Management</p>
+            </div>
+            <div class="col-auto">
+                <a href="/" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-home"></i> Back to Site
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h4 id="total-users">0</h4>
+                        <p class="card-text">Total Users</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h4 id="total-bids">0</h4>
+                        <p class="card-text">Total Bids</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning">
+                    <div class="card-body">
+                        <h4 id="pending-bids">0</h4>
+                        <p class="card-text">Pending Bids</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-danger">
+                    <div class="card-body">
+                        <h4 id="needs-attention">0</h4>
+                        <p class="card-text">Needs Attention</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mt-4" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+                    <i class="fas fa-users"></i> Clients & Bids
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="all-bids-tab" data-bs-toggle="tab" data-bs-target="#all-bids" type="button" role="tab">
+                    <i class="fas fa-list"></i> All Bids
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content mt-3" id="adminTabContent">
+            <!-- Users Tab -->
+            <div class="tab-pane fade show active" id="users" role="tabpanel">
+                <div class="row" id="users-container">
+                    <!-- Users will be loaded here -->
+                </div>
+            </div>
+
+            <!-- All Bids Tab -->
+            <div class="tab-pane fade" id="all-bids" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Client</th>
+                                <th>Lot #</th>
+                                <th>Max Bid</th>
+                                <th>Deposit</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-bids-table">
+                            <!-- All bids will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let allUsers = [];
+        let allBids = [];
+
+        // Load admin data
+        async function loadAdminData() {
+            try {
+                // Load users
+                const usersResponse = await fetch('/api/admin/users');
+                const usersData = await usersResponse.json();
+                
+                if (usersData.success) {
+                    allUsers = usersData.users;
+                    displayUsers(allUsers);
+                    updateStats(allUsers);
+                }
+
+                // Load all bids
+                const bidsResponse = await fetch('/api/admin/bids');
+                const bidsData = await bidsResponse.json();
+                
+                if (bidsData.success) {
+                    allBids = bidsData.bids;
+                    displayAllBids(allBids);
+                }
+            } catch (error) {
+                console.error('Error loading admin data:', error);
+                alert('Error loading admin data');
+            }
+        }
+
+        // Display users
+        function displayUsers(users) {
+            const container = $('#users-container');
+            container.empty();
+
+            if (users.length === 0) {
+                container.html('<div class="col-12"><div class="alert alert-info">No users found</div></div>');
+                return;
+            }
+
+            users.forEach(user => {
+                const userCard = `
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card user-card ${user.needs_attention ? 'attention-alert' : ''}" onclick="toggleUserBids('${user.id}')">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5 class="card-title">${user.full_name || 'No Name'}</h5>
+                                        <p class="card-text mb-1">
+                                            <i class="fas fa-envelope"></i> ${user.email}
+                                        </p>
+                                        ${user.phone ? `<p class="card-text mb-1"><i class="fas fa-phone"></i> ${user.phone}</p>` : ''}
+                                        <p class="card-text">
+                                            <small class="text-muted">
+                                                <i class="fas fa-gavel"></i> ${user.total_bids} total bids • 
+                                                ${user.active_bids} active
+                                            </small>
+                                        </p>
+                                    </div>
+                                    ${user.needs_attention ? 
+                                        '<span class="badge bg-danger"><i class="fas fa-exclamation-circle"></i> Attention</span>' : 
+                                        '<span class="badge bg-success"><i class="fas fa-check"></i> OK</span>'
+                                    }
+                                </div>
+                                
+                                <!-- Bid Details -->
+                                <div class="bid-details mt-3" id="bids-${user.id}">
+                                    ${user.bids.length > 0 ? 
+                                        user.bids.map(bid => `
+                                            <div class="border-top pt-2 mt-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <strong>Lot ${bid.lot_number}</strong><br>
+                                                        <small>Max: $${bid.max_bid} • Deposit: $${bid.deposit_amount}</small>
+                                                    </div>
+                                                    <div class="text-end">
+                                                        <span class="badge ${getStatusBadgeClass(bid.status)} status-badge">${bid.status}</span>
+                                                        <div class="btn-group btn-group-sm mt-1">
+                                                            <button class="btn btn-outline-primary btn-sm" onclick="updateBidStatus(${bid.id}, 'pending', event)">Pending</button>
+                                                            <button class="btn btn-outline-warning btn-sm" onclick="updateBidStatus(${bid.id}, 'winning', event)">Winning</button>
+                                                            <button class="btn btn-outline-danger btn-sm" onclick="updateBidStatus(${bid.id}, 'outbid', event)">Outbid</button>
+                                                            <button class="btn btn-outline-success btn-sm" onclick="updateBidStatus(${bid.id}, 'won', event)">Won</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted">
+                                                    Created: ${new Date(bid.created_at).toLocaleDateString()}
+                                                </small>
+                                            </div>
+                                        `).join('') : 
+                                        '<p class="text-muted mb-0">No bids yet</p>'
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.append(userCard);
+            });
+        }
+
+        // Display all bids in table
+        function displayAllBids(bids) {
+            const tbody = $('#all-bids-table');
+            tbody.empty();
+
+            if (bids.length === 0) {
+                tbody.html('<tr><td colspan="8" class="text-center">No bids found</td></tr>');
+                return;
+            }
+
+            bids.forEach(bid => {
+                const user = bid.users;
+                const row = `
+                    <tr>
+                        <td>${bid.id}</td>
+                        <td>
+                            <strong>${user?.full_name || 'No Name'}</strong><br>
+                            <small class="text-muted">${user?.email}</small>
+                        </td>
+                        <td>${bid.lot_number}</td>
+                        <td>$${bid.max_bid}</td>
+                        <td>$${bid.deposit_amount}</td>
+                        <td>
+                            <span class="badge ${getStatusBadgeClass(bid.status)}">${bid.status}</span>
+                        </td>
+                        <td>${new Date(bid.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="updateBidStatus(${bid.id}, 'pending')">Pending</button>
+                                <button class="btn btn-outline-warning" onclick="updateBidStatus(${bid.id}, 'winning')">Winning</button>
+                                <button class="btn btn-outline-danger" onclick="updateBidStatus(${bid.id}, 'outbid')">Outbid</button>
+                                <button class="btn btn-outline-success" onclick="updateBidStatus(${bid.id}, 'won')">Won</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        }
+
+        // Update bid status
+        async function updateBidStatus(bidId, status, event = null) {
+            if (event) event.stopPropagation();
+            
+            if (!confirm(`Change bid #${bidId} status to "${status}"?`)) return;
+
+            try {
+                const response = await fetch(`/api/admin/bids/${bidId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Bid status updated successfully!');
+                    loadAdminData(); // Reload data
+                } else {
+                    alert('Error updating bid: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error updating bid:', error);
+                alert('Error updating bid status');
+            }
+        }
+
+        // Toggle user bid details
+        function toggleUserBids(userId) {
+            const details = $(`#bids-${userId}`);
+            details.toggleClass('show');
+        }
+
+        // Update statistics
+        function updateStats(users) {
+            const totalBids = users.reduce((sum, user) => sum + user.total_bids, 0);
+            const pendingBids = users.reduce((sum, user) => sum + user.bids.filter(b => b.status === 'pending').length, 0);
+            const needsAttention = users.filter(user => user.needs_attention).length;
+
+            $('#total-users').text(users.length);
+            $('#total-bids').text(totalBids);
+            $('#pending-bids').text(pendingBids);
+            $('#needs-attention').text(needsAttention);
+        }
+
+        // Helper function for status badge classes
+        function getStatusBadgeClass(status) {
+            const classes = {
+                'pending': 'bg-warning',
+                'winning': 'bg-success',
+                'outbid': 'bg-danger',
+                'won': 'bg-success',
+                'lost': 'bg-secondary'
+            };
+            return classes[status] || 'bg-secondary';
+        }
+
+        // Initialize admin dashboard
+        $(document).ready(function() {
+            loadAdminData();
+            
+            // Refresh data every 30 seconds
+            setInterval(loadAdminData, 30000);
+        });
+    </script>
+</body>
+</html>
