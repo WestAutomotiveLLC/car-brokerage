@@ -90,6 +90,14 @@ app.post('/api/bids', async (req, res) => {
   try {
     const { lot_number, max_bid, user_id } = req.body;
     
+    // Validate user_id is a number
+    if (!user_id || isNaN(user_id)) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Valid user ID is required' 
+      });
+    }
+    
     const deposit_amount = max_bid > 2500 ? max_bid * 0.10 : 0;
     const service_fee = 215;
     const total_amount = deposit_amount + service_fee;
@@ -98,17 +106,18 @@ app.post('/api/bids', async (req, res) => {
       .from('bids')
       .insert([
         { 
-          user_id: user_id || 'demo-user-123', 
+          user_id: parseInt(user_id), // Convert to integer
           lot_number, 
-          max_bid, 
-          deposit_amount,
-          service_fee,
+          max_bid: parseFloat(max_bid), 
+          deposit_amount: parseFloat(deposit_amount),
+          service_fee: parseFloat(service_fee),
           status: 'pending'
         }
       ])
       .select();
 
     if (error) {
+      console.error('Database error:', error);
       return res.status(400).json({ 
         success: false,
         error: error.message 
@@ -125,6 +134,7 @@ app.post('/api/bids', async (req, res) => {
       service_fee: service_fee
     });
   } catch (error) {
+    console.error('Create bid error:', error);
     res.status(500).json({ 
       success: false,
       error: 'Internal server error' 
@@ -357,10 +367,18 @@ app.get('/api/bids/:user_id', async (req, res) => {
   try {
     const { user_id } = req.params;
     
+    // Validate user_id is a number
+    if (!user_id || isNaN(user_id)) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Valid user ID is required' 
+      });
+    }
+    
     const { data, error } = await supabase
       .from('bids')
       .select('*')
-      .eq('user_id', user_id)
+      .eq('user_id', parseInt(user_id))
       .order('created_at', { ascending: false });
 
     if (error) {
