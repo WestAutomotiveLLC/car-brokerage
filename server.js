@@ -5,7 +5,7 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Hardcoded Supabase credentials (since env vars aren't loading)
+// Hardcoded Supabase credentials
 const SUPABASE_URL = 'https://xjbatcwgenoprbgouiyq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqYmF0Y3dnZW5vcHJiZ291aXlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3NDU4MjAsImV4cCI6MjA3NzMyMTgyMH0.A9Ij8pTsy-BQhSjks5Hrfp1cDsWNBVbvwlt2LoFE4D4';
 
@@ -14,8 +14,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 console.log('✅ Supabase client initialized');
 
-// Middleware
-app.use(express.static(path.join(__dirname, '..')));
+// Middleware - Serve static files from current directory
+app.use(express.static(__dirname));
 app.use(express.json());
 
 // Health check
@@ -181,20 +181,27 @@ app.get('/api/bids', async (req, res) => {
   }
 });
 
-// Serve HTML pages
+// Serve HTML pages - CORRECTED PATHS
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/place-bid', (req, res) => {
-  res.sendFile(path.join(__dirname, '../place-bid.html'));
+  res.sendFile(path.join(__dirname, 'place-bid.html'));
 });
 
 app.get('/my-bids', (req, res) => {
-  res.sendFile(path.join(__dirname, '../my-bids.html'));
+  res.sendFile(path.join(__dirname, 'my-bids.html'));
+});
+
+// Catch-all route for any other HTML files
+app.get('*.html', (req, res) => {
+  const fileName = req.path.substring(1); // Remove leading slash
+  res.sendFile(path.join(__dirname, fileName));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚗 West Automotive Brokerage server running on port ${PORT}`);
   console.log(`📊 Supabase connected: ${SUPABASE_URL}`);
+  console.log(`📁 Serving files from: ${__dirname}`);
 });
