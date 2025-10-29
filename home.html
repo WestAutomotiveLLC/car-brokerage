@@ -235,11 +235,11 @@
 <body>
   <header>
     <div class="logo">West <span>Automotive</span></div>
-    <div class="nav-buttons">
-      <button onclick="showSignIn()">Sign Up</button>
-      <button onclick="showLogin()">Login</button>
-    </div>
-  </header>
+      <div class="nav-buttons">
+        <button onclick="showSignIn()">Sign Up</button>
+        <button onclick="showLogin()">Login</button>
+      </div>
+</header>
 
   <section class="hero">
     <h1>You <span class="highlight">Don’t Pay</span> Anything Unless You Win</h1>
@@ -290,11 +290,13 @@
     <p>Join hundreds of buyers who got their dream cars at auction prices — without the stress.</p>
     <button onclick="showSignIn()">Start Bidding Now</button>
   </section>
-  <footer>
-    © 2025 West Automotive Brokerage LLC — All rights reserved.
-  </footer>
-
-  <script>
+    <footer>
+      © 2025 West Automotive Brokerage LLC — All rights reserved.
+      <div class="mt-2">
+        <a href="about.html" class="text-slate-400 hover:text-white text-sm">About Us</a>
+      </div>
+    </footer>
+<script>
     function showSignIn() {
       window.location.href = 'signup.html';
     }
