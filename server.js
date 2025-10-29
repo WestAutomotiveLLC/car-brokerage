@@ -85,10 +85,57 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Create a new bid
+app.post('/api/bids', async (req, res) => {
+  try {
+    const { lot_number, max_bid, user_id } = req.body;
+    
+    const deposit_amount = max_bid > 2500 ? max_bid * 0.10 : 0;
+    const service_fee = 215;
+    const total_amount = deposit_amount + service_fee;
+    
+    const { data, error } = await supabase
+      .from('bids')
+      .insert([
+        { 
+          user_id: user_id || 'demo-user-123', 
+          lot_number, 
+          max_bid, 
+          deposit_amount,
+          service_fee,
+          status: 'pending'
+        }
+      ])
+      .select();
+
+    if (error) {
+      return res.status(400).json({ 
+        success: false,
+        error: error.message 
+      });
+    }
+    
+    res.json({ 
+      success: true, 
+      message: 'Bid created! Please complete payment.',
+      bid: data[0],
+      requires_payment: true,
+      total_amount: total_amount,
+      deposit_amount: deposit_amount,
+      service_fee: service_fee
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error' 
+    });
+  }
+});
+
 // Create Stripe payment intent
 app.post('/api/create-payment-intent', async (req, res) => {
   try {
-    const { amount, bid_id, user_id } = req.body;
+    const { amount, bid_id, user_id, lot_number } = req.body;
     
     console.log('Creating payment intent for amount:', amount, 'bid:', bid_id);
     
@@ -101,11 +148,20 @@ app.post('/api/create-payment-intent', async (req, res) => {
       metadata: {
         bid_id: bid_id,
         user_id: user_id,
-        payment_type: 'deposit'
+        lot_number: lot_number,
+        payment_type: 'bid_payment'
       }
     });
 
     console.log('Payment intent created:', paymentIntent.id);
+
+    // Update bid with payment intent ID
+    await supabase
+      .from('bids')
+      .update({ 
+        payment_intent_id: paymentIntent.id
+      })
+      .eq('id', bid_id);
 
     res.json({
       success: true,
@@ -134,8 +190,7 @@ app.post('/api/confirm-payment', async (req, res) => {
       const { data, error } = await supabase
         .from('bids')
         .update({ 
-          deposit_paid: true,
-          status: 'active'
+          status: 'pending'
         })
         .eq('id', bid_id)
         .select();
@@ -146,7 +201,7 @@ app.post('/api/confirm-payment', async (req, res) => {
 
       res.json({
         success: true,
-        message: 'Payment confirmed and bid activated!',
+        message: 'Payment confirmed! Your bid is now pending.',
         bid: data[0]
       });
     } else {
@@ -297,49 +352,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Create a new bid
-app.post('/api/bids', async (req, res) => {
-  try {
-    const { lot_number, max_bid, user_id, notes } = req.body;
-    
-    const deposit_amount = max_bid > 2500 ? max_bid * 0.10 : 0;
-    
-    const { data, error } = await supabase
-      .from('bids')
-      .insert([
-        { 
-          user_id: user_id || 'demo-user-123', 
-          lot_number, 
-          max_bid, 
-          deposit_amount,
-          notes,
-          status: deposit_amount > 0 ? 'pending_payment' : 'active'
-        }
-      ])
-      .select();
-
-    if (error) {
-      return res.status(400).json({ 
-        success: false,
-        error: error.message 
-      });
-    }
-    
-    res.json({ 
-      success: true, 
-      message: deposit_amount > 0 ? 'Bid created! Please pay the deposit to activate.' : 'Bid placed successfully!',
-      bid: data[0],
-      requires_deposit: deposit_amount > 0,
-      deposit_amount: deposit_amount
-    });
-  } catch (error) {
-    res.status(500).json({ 
-      success: false,
-      error: 'Internal server error' 
-    });
-  }
-});
-
 // Get user's bids
 app.get('/api/bids/:user_id', async (req, res) => {
   try {
@@ -388,6 +400,38 @@ app.get('/api/bids', async (req, res) => {
     res.json({ 
       success: true,
       bids: data 
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error' 
+    });
+  }
+});
+
+// Update bid status (for admin)
+app.patch('/api/bids/:bid_id', async (req, res) => {
+  try {
+    const { bid_id } = req.params;
+    const { status } = req.body;
+    
+    const { data, error } = await supabase
+      .from('bids')
+      .update({ status })
+      .eq('id', bid_id)
+      .select();
+
+    if (error) {
+      return res.status(400).json({ 
+        success: false,
+        error: error.message 
+      });
+    }
+    
+    res.json({ 
+      success: true,
+      message: 'Bid status updated',
+      bid: data[0]
     });
   } catch (error) {
     res.status(500).json({ 
