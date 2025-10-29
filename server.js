@@ -35,79 +35,131 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// User Registration
+// User Registration - SIMPLIFIED
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const { email, password, full_name, phone, address } = req.body;
     
-    // Create user in Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    console.log('Signup attempt for:', email);
+    
+    // Create user in Supabase Auth only
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name,
-          phone
+          phone,
+          address: address || ''
         }
       }
     });
 
-    if (authError) throw authError;
+    if (error) {
+      console.error('Signup error:', error);
+      return res.status(400).json({ 
+        success: false,
+        error: error.message 
+      });
+    }
 
-    // Create user profile in database
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .insert([
-        { 
-          id: authData.user.id,
-          email, 
-          full_name, 
-          phone, 
-          address: address || {}
-        }
-      ])
-      .select();
-
-    if (userError) throw userError;
-
+    console.log('Signup successful for:', email);
+    
     res.json({ 
       success: true, 
-      user: userData[0],
-      message: 'Registration successful!'
+      message: 'Registration successful! Please check your email to verify your account.',
+      user: {
+        id: data.user?.id,
+        email: data.user?.email,
+        full_name: data.user?.user_metadata?.full_name,
+        phone: data.user?.user_metadata?.phone
+      }
     });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Signup catch error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error during registration' 
+    });
   }
 });
 
-// User Login
+// User Login - SIMPLIFIED
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    console.log('Login attempt for:', email);
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Login error:', error);
+      return res.status(400).json({ 
+        success: false,
+        error: error.message 
+      });
+    }
 
-    // Get user profile
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', data.user.id)
-      .single();
-
-    if (userError) throw userError;
-
+    console.log('Login successful for:', email);
+    
     res.json({ 
       success: true, 
-      user: userData,
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        full_name: data.user.user_metadata?.full_name,
+        phone: data.user.user_metadata?.phone
+      },
       session: data.session
     });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Login catch error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error during login' 
+    });
+  }
+});
+
+// Get current user
+app.get('/api/auth/user', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'No token provided' 
+      });
+    }
+
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      return res.status(401).json({ 
+        success: false,
+        error: 'Invalid token' 
+      });
+    }
+
+    res.json({ 
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.user_metadata?.full_name,
+        phone: user.user_metadata?.phone
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error' 
+    });
   }
 });
 
@@ -133,7 +185,12 @@ app.post('/api/bids', async (req, res) => {
       ])
       .select();
 
-    if (error) throw error;
+    if (error) {
+      return res.status(400).json({ 
+        success: false,
+        error: error.message 
+      });
+    }
     
     res.json({ 
       success: true, 
@@ -142,7 +199,10 @@ app.post('/api/bids', async (req, res) => {
       deposit_amount: deposit_amount
     });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error' 
+    });
   }
 });
 
@@ -157,11 +217,22 @@ app.get('/api/bids/:user_id', async (req, res) => {
       .eq('user_id', user_id)
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      return res.status(400).json({ 
+        success: false,
+        error: error.message 
+      });
+    }
     
-    res.json({ bids: data });
+    res.json({ 
+      success: true,
+      bids: data 
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error' 
+    });
   }
 });
 
@@ -173,15 +244,26 @@ app.get('/api/bids', async (req, res) => {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      return res.status(400).json({ 
+        success: false,
+        error: error.message 
+      });
+    }
     
-    res.json({ bids: data });
+    res.json({ 
+      success: true,
+      bids: data 
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error' 
+    });
   }
 });
 
-// Serve HTML pages - CORRECTED PATHS
+// Serve HTML pages
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -196,12 +278,11 @@ app.get('/my-bids', (req, res) => {
 
 // Catch-all route for any other HTML files
 app.get('*.html', (req, res) => {
-  const fileName = req.path.substring(1); // Remove leading slash
+  const fileName = req.path.substring(1);
   res.sendFile(path.join(__dirname, fileName));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚗 West Automotive Brokerage server running on port ${PORT}`);
   console.log(`📊 Supabase connected: ${SUPABASE_URL}`);
-  console.log(`📁 Serving files from: ${__dirname}`);
 });
