@@ -13,6 +13,10 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 console.log('✅ Supabase client initialized');
+console.log('🚗 West Automotive Brokerage server running on port', PORT);
+console.log('📊 Supabase connected:', SUPABASE_URL);
+console.log('📁 Serving files from:', __dirname);
+console.log('🌐 Live at: https://car-brokerage.onrender.com');
 
 // Middleware - Serve static files from current directory
 app.use(express.static(__dirname));
@@ -35,7 +39,7 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// User Registration - SIMPLIFIED
+// User Registration - WITH BETTER ERROR MESSAGES
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const { email, password, full_name, phone, address } = req.body;
@@ -56,7 +60,24 @@ app.post('/api/auth/signup', async (req, res) => {
     });
 
     if (error) {
-      console.error('Signup error:', error);
+      console.error('Signup error:', error.message);
+      
+      // Check if user already exists
+      if (error.message.includes('already registered') || error.message.includes('user_exists')) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'User already exists with this email. Please try logging in instead.'
+        });
+      }
+      
+      // Check for weak password
+      if (error.message.includes('password')) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Password is too weak. Please use at least 6 characters.'
+        });
+      }
+      
       return res.status(400).json({ 
         success: false,
         error: error.message 
@@ -64,6 +85,20 @@ app.post('/api/auth/signup', async (req, res) => {
     }
 
     console.log('Signup successful for:', email);
+    
+    // Check if email confirmation is required
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+      return res.json({ 
+        success: true, 
+        message: 'User already created. Please check your email to verify your account or try logging in.',
+        user: {
+          id: data.user?.id,
+          email: data.user?.email,
+          full_name: data.user?.user_metadata?.full_name,
+          phone: data.user?.user_metadata?.phone
+        }
+      });
+    }
     
     res.json({ 
       success: true, 
@@ -84,7 +119,7 @@ app.post('/api/auth/signup', async (req, res) => {
   }
 });
 
-// User Login - SIMPLIFIED
+// User Login - WITH BETTER ERROR MESSAGES
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -97,7 +132,23 @@ app.post('/api/auth/login', async (req, res) => {
     });
 
     if (error) {
-      console.error('Login error:', error);
+      console.error('Login error:', error.message);
+      
+      // Check for specific error types
+      if (error.message.includes('Invalid login credentials')) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Invalid email or password. Please try again.'
+        });
+      }
+      
+      if (error.message.includes('Email not confirmed')) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Please check your email to verify your account before logging in.'
+        });
+      }
+      
       return res.status(400).json({ 
         success: false,
         error: error.message 
@@ -108,6 +159,7 @@ app.post('/api/auth/login', async (req, res) => {
     
     res.json({ 
       success: true, 
+      message: 'Login successful!',
       user: {
         id: data.user.id,
         email: data.user.email,
@@ -194,6 +246,7 @@ app.post('/api/bids', async (req, res) => {
     
     res.json({ 
       success: true, 
+      message: 'Bid placed successfully!',
       bid: data[0],
       requires_deposit: deposit_amount > 0,
       deposit_amount: deposit_amount
@@ -283,6 +336,5 @@ app.get('*.html', (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚗 West Automotive Brokerage server running on port ${PORT}`);
-  console.log(`📊 Supabase connected: ${SUPABASE_URL}`);
+  console.log('✅ Server started successfully!');
 });
