@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bids - West Automotive LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <style>
+        .english { color: #1f2937; }
+        .spanish { color: #6b7280; }
+        .divider { color: #9ca3af; margin: 0 4px; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <div class="bg-white border-b border-gray-200 shadow-sm">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="text-xl font-bold text-blue-600">
+                    West <span class="text-blue-500">Automotive</span> Brokerage
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-700" id="userWelcome">Welcome!</span>
+                    <a href="/" class="text-blue-600 hover:text-blue-500">Home</a>
+                    <a href="/place-bid" class="text-blue-600 hover:text-blue-500">Place Bid</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="container mx-auto px-4 py-8 max-w-6xl">
+        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800">
+                    <span class="english">My Bids</span>
+                    <span class="divider">/</span>
+                    <span class="spanish">Mis Ofertas</span>
+                </h1>
+                <p class="mt-2 text-gray-600">
+                    <span class="english">View and manage your active bids</span>
+                    <span class="divider">/</span>
+                    <span class="spanish">Ver y administrar sus ofertas activas</span>
+                </p>
+            </div>
+
+            <!-- Bids Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="text-left py-3 px-4 text-gray-700 font-semibold">
+                                <span class="english">Lot #</span>
+                                <span class="divider">/</span>
+                                <span class="spanish">Lote #</span>
+                            </th>
+                            <th class="text-left py-3 px-4 text-gray-700 font-semibold">
+                                <span class="english">Max Bid</span>
+                                <span class="divider">/</span>
+                                <span class="spanish">Oferta Máx</span>
+                            </th>
+                            <th class="text-left py-3 px-4 text-gray-700 font-semibold">
+                                <span class="english">Status</span>
+                                <span class="divider">/</span>
+                                <span class="spanish">Estado</span>
+                            </th>
+                            <th class="text-left py-3 px-4 text-gray-700 font-semibold">
+                                <span class="english">Deposit</span>
+                                <span class="divider">/</span>
+                                <span class="spanish">Depósito</span>
+                            </th>
+                            <th class="text-left py-3 px-4 text-gray-700 font-semibold">
+                                <span class="english">Date</span>
+                                <span class="divider">/</span>
+                                <span class="spanish">Fecha</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="bids-table-body">
+                        <!-- Bids will be loaded here dynamically -->
+                        <tr>
+                            <td colspan="5" class="py-8 text-center text-gray-500">
+                                <i data-feather="package" class="w-12 h-12 mx-auto mb-4 text-gray-300"></i>
+                                <p>
+                                    <span class="english">No bids found</span>
+                                    <span class="divider">/</span>
+                                    <span class="spanish">No se encontraron ofertas</span>
+                                </p>
+                                <a href="/place-bid" class="text-blue-600 hover:text-blue-500 mt-2 inline-block">
+                                    <span class="english">Place your first bid</span>
+                                    <span class="divider">/</span>
+                                    <span class="spanish">Hacer su primera oferta</span>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- New Bid Button -->
+            <div class="text-center mt-8 pt-6 border-t border-gray-200">
+                <a href="/place-bid" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                    <i data-feather="plus" class="w-4 h-4 mr-2"></i>
+                    <span class="english">Place New Bid</span>
+                    <span class="divider">/</span>
+                    <span class="spanish">Hacer Nueva Oferta</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="text-center mt-8 text-sm text-gray-500">
+            <p>
+                <span class="english">© 2024 West Automotive LLC. All rights reserved.</span>
+            </p>
+        </div>
+    </main>
+
+    <script>
+        // Initialize Feather Icons
+        feather.replace();
+
+        // For demo purposes - in a real app, you would fetch from your API
+        const currentUser = { id: 'demo-user-id', full_name: 'Demo User' };
+        document.getElementById('userWelcome').textContent = `Welcome, ${currentUser.full_name}`;
+
+        // Simulate loading bids (replace with real API call)
+        setTimeout(() => {
+            // This would be replaced with: fetch(`/api/bids/${currentUser.id}`)
+            const bidsTable = document.getElementById('bids-table-body');
+            bidsTable.innerHTML = `
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                    <td class="py-3 px-4">
+                        <div class="font-mono text-gray-800">LOT-458712</div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="text-gray-800 font-semibold">$3,200</div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            <span class="english">Pending</span>
+                            <span class="divider">/</span>
+                            <span class="spanish">Pendiente</span>
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="text-green-600 font-semibold">$320</div>
+                        <div class="text-xs text-gray-500">
+                            <span class="english">Refundable</span>
+                            <span class="divider">/</span>
+                            <span class="spanish">Reembolsable</span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-gray-600 text-sm">
+                        Today, 2:30 PM
+                    </td>
+                </tr>
+                <tr class="border-b border-gray-100 hover:bg-gray-50">
+                    <td class="py-3 px-4">
+                        <div class="font-mono text-gray-800">LOT-389245</div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="text-gray-800 font-semibold">$2,100</div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span class="english">Won</span>
+                            <span class="divider">/</span>
+                            <span class="spanish">Ganada</span>
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="text-gray-400 font-semibold">-</div>
+                        <div class="text-xs text-gray-500">
+                            <span class="english">No deposit</span>
+                            <span class="divider">/</span>
+                            <span class="spanish">Sin depósito</span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-gray-600 text-sm">
+                        Yesterday, 10:15 AM
+                    </td>
+                </tr>
+            `;
+            feather.replace();
+        }, 1000);
+    </script>
+</body>
+</html>
