@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { createClient } = require('@supabase/supabase-js');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const session = require('express-session');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,17 @@ console.log('📊 Supabase connected:', process.env.SUPABASE_URL ? 'Yes' : 'No')
 console.log('💳 Stripe connected:', process.env.STRIPE_SECRET_KEY ? 'Yes' : 'No');
 console.log('📁 Current directory:', __dirname);
 console.log('🌐 Live at: https://car-brokerage.onrender.com');
+
+// Session middleware - ADD THIS
+app.use(session({
+  secret: process.env.FLASK_SECRET_KEY || 'car-brokerage-secret-123',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    maxAge: 60 * 60 * 1000, // 1 hour
+    secure: process.env.NODE_ENV === 'production'
+  }
+}));
 
 // Function to find HTML files in multiple locations
 function findHTMLFile(filename) {
@@ -58,6 +70,18 @@ app.use(express.static(path.join(__dirname, '..')));
 app.use(express.static(process.cwd()));
 app.use(express.json());
 
+// Middleware to check if user is logged in
+const requireAuth = (req, res, next) => {
+  if (req.session.user) {
+    next();
+  } else {
+    res.status(401).json({ 
+      success: false,
+      error: 'Please log in to continue' 
+    });
+  }
+};
+
 // Health check
 app.get('/api/health', async (req, res) => {
   try {
@@ -85,18 +109,22 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Create a new bid
-app.post('/api/bids', async (req, res) => {
+// Check auth status
+app.get('/api/auth/status', (req, res) => {
+  res.json({
+    success: true,
+    loggedIn: !!req.session.user,
+    user: req.session.user || null
+  });
+});
+
+// Create a new bid - ADD requireAuth middleware
+app.post('/api/bids', requireAuth, async (req, res) => {
   try {
-    const { lot_number, max_bid, user_id } = req.body;
+    const { lot_number, max_bid } = req.body;
+    const user_id = req.session.user.id; // Get user ID from session
     
-    // Validate user_id is a number
-    if (!user_id || isNaN(user_id)) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'Valid user ID is required' 
-      });
-    }
+    console.log('Creating bid for user:', user_id, 'lot:', lot_number);
     
     const deposit_amount = max_bid > 2500 ? max_bid * 0.10 : 0;
     const service_fee = 215;
@@ -106,7 +134,7 @@ app.post('/api/bids', async (req, res) => {
       .from('bids')
       .insert([
         { 
-          user_id: parseInt(user_id), // Convert to integer
+          user_id: parseInt(user_id),
           lot_number, 
           max_bid: parseFloat(max_bid), 
           deposit_amount: parseFloat(deposit_amount),
@@ -142,12 +170,13 @@ app.post('/api/bids', async (req, res) => {
   }
 });
 
-// Create Stripe payment intent
-app.post('/api/create-payment-intent', async (req, res) => {
+// Create Stripe payment intent - ADD requireAuth
+app.post('/api/create-payment-intent', requireAuth, async (req, res) => {
   try {
-    const { amount, bid_id, user_id, lot_number } = req.body;
+    const { amount, bid_id, lot_number } = req.body;
+    const user_id = req.session.user.id; // Get user ID from session
     
-    console.log('Creating payment intent for amount:', amount, 'bid:', bid_id);
+    console.log('Creating payment intent for user:', user_id, 'amount:', amount, 'bid:', bid_id);
     
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100),
@@ -187,8 +216,8 @@ app.post('/api/create-payment-intent', async (req, res) => {
   }
 });
 
-// Confirm payment and update bid
-app.post('/api/confirm-payment', async (req, res) => {
+// Confirm payment and update bid - ADD requireAuth
+app.post('/api/confirm-payment', requireAuth, async (req, res) => {
   try {
     const { paymentIntentId, bid_id } = req.body;
     
@@ -273,28 +302,26 @@ app.post('/api/auth/signup', async (req, res) => {
 
     console.log('Signup successful for:', email);
     
+    // Store user in session
+    req.session.user = {
+      id: data.user.id,
+      email: data.user.email,
+      full_name: data.user.user_metadata?.full_name,
+      phone: data.user.user_metadata?.phone
+    };
+    
     if (data.user && data.user.identities && data.user.identities.length === 0) {
       return res.json({ 
         success: true, 
         message: 'User already created. Please check your email to verify your account or try logging in.',
-        user: {
-          id: data.user?.id,
-          email: data.user?.email,
-          full_name: data.user?.user_metadata?.full_name,
-          phone: data.user?.user_metadata?.phone
-        }
+        user: req.session.user
       });
     }
     
     res.json({ 
       success: true, 
       message: 'Registration successful! Please check your email to verify your account.',
-      user: {
-        id: data.user?.id,
-        email: data.user?.email,
-        full_name: data.user?.user_metadata?.full_name,
-        phone: data.user?.user_metadata?.phone
-      }
+      user: req.session.user
     });
   } catch (error) {
     console.error('Signup catch error:', error);
@@ -342,16 +369,18 @@ app.post('/api/auth/login', async (req, res) => {
 
     console.log('Login successful for:', email);
     
+    // Store user in session
+    req.session.user = {
+      id: data.user.id,
+      email: data.user.email,
+      full_name: data.user.user_metadata?.full_name,
+      phone: data.user.user_metadata?.phone
+    };
+    
     res.json({ 
       success: true, 
       message: 'Login successful!',
-      user: {
-        id: data.user.id,
-        email: data.user.email,
-        full_name: data.user.user_metadata?.full_name,
-        phone: data.user.user_metadata?.phone
-      },
-      session: data.session
+      user: req.session.user
     });
   } catch (error) {
     console.error('Login catch error:', error);
@@ -362,18 +391,26 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Get user's bids
-app.get('/api/bids/:user_id', async (req, res) => {
-  try {
-    const { user_id } = req.params;
-    
-    // Validate user_id is a number
-    if (!user_id || isNaN(user_id)) {
-      return res.status(400).json({ 
+// User Logout
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ 
         success: false,
-        error: 'Valid user ID is required' 
+        error: 'Could not log out' 
       });
     }
+    res.json({ 
+      success: true, 
+      message: 'Logged out successfully' 
+    });
+  });
+});
+
+// Get user's bids - ADD requireAuth
+app.get('/api/bids/my-bids', requireAuth, async (req, res) => {
+  try {
+    const user_id = req.session.user.id;
     
     const { data, error } = await supabase
       .from('bids')
