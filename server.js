@@ -2,9 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const session = require('express-session');
 const { createClient } = require('@supabase/supabase-js');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const session = require('express-session');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,9 +32,9 @@ console.log('💳 Stripe connected:', process.env.STRIPE_SECRET_KEY ? 'Yes' : 'N
 console.log('📁 Current directory:', __dirname);
 console.log('🌐 Live at: https://car-brokerage.onrender.com');
 
-// Session middleware - ADD THIS
+// Session middleware
 app.use(session({
-  secret: process.env.FLASK_SECRET_KEY || 'car-brokerage-secret-123',
+  secret: process.env.FLASK_SECRET_KEY || 'car-brokerage-west-auto-2024-secret-123',
   resave: false,
   saveUninitialized: false,
   cookie: { 
@@ -64,7 +64,7 @@ function findHTMLFile(filename) {
   return null;
 }
 
-// Middleware - Try multiple static file locations
+// Middleware
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, '..')));
 app.use(express.static(process.cwd()));
@@ -118,11 +118,11 @@ app.get('/api/auth/status', (req, res) => {
   });
 });
 
-// Create a new bid - ADD requireAuth middleware
+// Create a new bid
 app.post('/api/bids', requireAuth, async (req, res) => {
   try {
     const { lot_number, max_bid } = req.body;
-    const user_id = req.session.user.id; // Get user ID from session
+    const user_id = req.session.user.id;
     
     console.log('Creating bid for user:', user_id, 'lot:', lot_number);
     
@@ -170,15 +170,15 @@ app.post('/api/bids', requireAuth, async (req, res) => {
   }
 });
 
-// Create Stripe payment intent - ADD requireAuth
+// Create Stripe payment intent
 app.post('/api/create-payment-intent', requireAuth, async (req, res) => {
   try {
     const { amount, bid_id, lot_number } = req.body;
-    const user_id = req.session.user.id; // Get user ID from session
+    const user_id = req.session.user.id;
     
     console.log('Creating payment intent for user:', user_id, 'amount:', amount, 'bid:', bid_id);
     
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntent = await stripe.PaymentIntent.create({
       amount: Math.round(amount * 100),
       currency: 'usd',
       automatic_payment_methods: {
@@ -216,7 +216,7 @@ app.post('/api/create-payment-intent', requireAuth, async (req, res) => {
   }
 });
 
-// Confirm payment and update bid - ADD requireAuth
+// Confirm payment and update bid
 app.post('/api/confirm-payment', requireAuth, async (req, res) => {
   try {
     const { paymentIntentId, bid_id } = req.body;
@@ -407,7 +407,7 @@ app.post('/api/auth/logout', (req, res) => {
   });
 });
 
-// Get user's bids - ADD requireAuth
+// Get user's bids
 app.get('/api/bids/my-bids', requireAuth, async (req, res) => {
   try {
     const user_id = req.session.user.id;
