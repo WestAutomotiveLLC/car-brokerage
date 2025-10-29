@@ -6,11 +6,34 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Check for required environment variables
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+  console.error('❌ Missing Supabase environment variables');
+  console.error('SUPABASE_URL:', process.env.SUPABASE_URL ? 'Set' : 'Missing');
+  console.error('SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'Set' : 'Missing');
+  
+  // Try to use fallback values for development
+  const fallbackUrl = 'https://xjbatcwgenoprbgouiyq.supabase.co';
+  const fallbackKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqYmF0Y3dnZW5vcHJiZ291aXlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3NDU4MjAsImV4cCI6MjA3NzMyMTgyMH0.A9Ij8pTsy-BQhSjks5Hrfp1cDsWNBVbvwlt2LoFE4D4';
+  
+  if (!fallbackUrl || !fallbackKey) {
+    console.error('❌ No fallback values available. Exiting.');
+    process.exit(1);
+  }
+  
+  console.log('⚠️ Using fallback Supabase credentials');
+  process.env.SUPABASE_URL = fallbackUrl;
+  process.env.SUPABASE_ANON_KEY = fallbackKey;
+}
+
 // Supabase client
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY
 );
+
+console.log('✅ Supabase client initialized');
+console.log('🔗 Supabase URL:', process.env.SUPABASE_URL);
 
 // Middleware
 app.use(express.static(path.join(__dirname, '..')));
@@ -19,6 +42,7 @@ app.use(express.json());
 // Health check
 app.get('/api/health', async (req, res) => {
   try {
+    // Test Supabase connection by counting bids
     const { count, error } = await supabase
       .from('bids')
       .select('*', { count: 'exact', head: true });
@@ -241,4 +265,5 @@ app.get('/my-bids', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚗 West Automotive Brokerage server running on port ${PORT}`);
   console.log(`📊 Supabase connected: ${process.env.SUPABASE_URL}`);
+  console.log(`🌐 Server URL: https://car-brokerage.onrender.com`);
 });
