@@ -32,14 +32,53 @@ console.log('💳 Stripe connected:', process.env.STRIPE_SECRET_KEY ? 'Yes' : 'N
 console.log('📁 Current directory:', __dirname);
 console.log('🌐 Live at: https://car-brokerage.onrender.com');
 
-// Session middleware
+// Simple memory store for sessions (production-safe)
+class SimpleMemoryStore {
+  constructor() {
+    this.sessions = new Map();
+  }
+
+  get(sid, callback) {
+    const session = this.sessions.get(sid);
+    callback(null, session);
+  }
+
+  set(sid, session, callback) {
+    this.sessions.set(sid, session);
+    callback(null);
+  }
+
+  destroy(sid, callback) {
+    this.sessions.delete(sid);
+    callback(null);
+  }
+
+  // Clean up expired sessions every hour
+  startCleanup() {
+    setInterval(() => {
+      const now = Date.now();
+      for (const [sid, session] of this.sessions.entries()) {
+        if (session.cookie && session.cookie.expires && new Date(session.cookie.expires) < new Date(now)) {
+          this.sessions.delete(sid);
+        }
+      }
+    }, 60 * 60 * 1000); // Run every hour
+  }
+}
+
+const memoryStore = new SimpleMemoryStore();
+memoryStore.startCleanup();
+
+// Session middleware with production-safe store
 app.use(session({
   secret: process.env.FLASK_SECRET_KEY || 'car-brokerage-west-auto-2024-secret-123',
   resave: false,
   saveUninitialized: false,
+  store: memoryStore,
   cookie: { 
     maxAge: 60 * 60 * 1000, // 1 hour
-    secure: process.env.NODE_ENV === 'production'
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true
   }
 }));
 
@@ -134,7 +173,7 @@ app.post('/api/bids', requireAuth, async (req, res) => {
       .from('bids')
       .insert([
         { 
-          user_id: parseInt(user_id),
+          user_id: user_id, // Keep as string for Supabase Auth
           lot_number, 
           max_bid: parseFloat(max_bid), 
           deposit_amount: parseFloat(deposit_amount),
@@ -178,7 +217,7 @@ app.post('/api/create-payment-intent', requireAuth, async (req, res) => {
     
     console.log('Creating payment intent for user:', user_id, 'amount:', amount, 'bid:', bid_id);
     
-    const paymentIntent = await stripe.PaymentIntent.create({
+    const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100),
       currency: 'usd',
       automatic_payment_methods: {
@@ -415,7 +454,7 @@ app.get('/api/bids/my-bids', requireAuth, async (req, res) => {
     const { data, error } = await supabase
       .from('bids')
       .select('*')
-      .eq('user_id', parseInt(user_id))
+      .eq('user_id', user_id) // Use string ID directly
       .order('created_at', { ascending: false });
 
     if (error) {
