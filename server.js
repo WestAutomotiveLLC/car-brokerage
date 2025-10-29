@@ -19,7 +19,6 @@ app.use(express.json());
 // Health check
 app.get('/api/health', async (req, res) => {
   try {
-    // Test Supabase connection by counting bids
     const { count, error } = await supabase
       .from('bids')
       .select('*', { count: 'exact', head: true });
@@ -41,11 +40,126 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// User Registration
+app.post('/api/auth/signup', async (req, res) => {
+  try {
+    const { email, password, full_name, phone, address } = req.body;
+    
+    // Create user in Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name,
+          phone
+        }
+      }
+    });
+
+    if (authError) throw authError;
+
+    // Create user profile in database
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .insert([
+        { 
+          id: authData.user.id,
+          email, 
+          full_name, 
+          phone, 
+          address: address || {}
+        }
+      ])
+      .select();
+
+    if (userError) throw userError;
+
+    res.json({ 
+      success: true, 
+      user: userData[0],
+      message: 'Registration successful!'
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// User Login
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) throw error;
+
+    // Get user profile
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
+    if (userError) throw userError;
+
+    res.json({ 
+      success: true, 
+      user: userData,
+      session: data.session
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get current user
+app.get('/api/auth/user', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    // Get user profile
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+
+    if (userError) throw userError;
+
+    res.json({ user: userData });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // Create a new bid
 app.post('/api/bids', async (req, res) => {
   try {
     const { lot_number, max_bid, user_id, notes } = req.body;
     
+    // Verify user exists
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', user_id)
+      .single();
+
+    if (userError) throw new Error('User not found');
+
     // Calculate deposit if bid is over $2500
     const deposit_amount = max_bid > 2500 ? max_bid * 0.10 : 0;
     
@@ -53,7 +167,7 @@ app.post('/api/bids', async (req, res) => {
       .from('bids')
       .insert([
         { 
-          user_id: user_id || 'demo-user-123', 
+          user_id, 
           lot_number, 
           max_bid, 
           deposit_amount,
@@ -100,37 +214,12 @@ app.get('/api/bids', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('bids')
-      .select('*')
+      .select('*, users(full_name, email)')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
     
     res.json({ bids: data });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Create a new user
-app.post('/api/users', async (req, res) => {
-  try {
-    const { email, full_name, phone, address } = req.body;
-    
-    const { data, error } = await supabase
-      .from('users')
-      .insert([
-        { 
-          email, 
-          full_name, 
-          phone, 
-          address
-        }
-      ])
-      .select();
-
-    if (error) throw error;
-    
-    res.json({ success: true, user: data[0] });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
