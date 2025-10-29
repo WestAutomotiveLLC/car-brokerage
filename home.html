@@ -1,289 +1,307 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>West Automotive Brokerage - Car Auction Broker</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>West Automotive Brokerage</title>
+  <style>
+    /* GLOBAL */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    }
 
-        body {
-            background: linear-gradient(135deg, #1a2a3a 0%, #2c3e50 100%);
-            min-height: 100vh;
-            color: white;
-        }
+    body {
+      background: #0f141a;
+      color: #f5f5f5;
+      overflow-x: hidden;
+    }
 
-        .es {
-            color: #f1c40f; /* gold color for Spanish text */
-            font-style: italic;
-        }
+    h1, h2, h3 {
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
 
-        /* Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 40px;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-        }
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
 
-        .logo {
-            font-size: 28px;
-            font-weight: bold;
-            color: #2c3e50;
-        }
+    /* HEADER */
+    header {
+      width: 100%;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: rgba(20, 25, 30, 0.75);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 60px;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
 
-        .logo span {
-            color: #e74c3c;
-        }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #fff;
+    }
 
-        .auth-buttons {
-            display: flex;
-            gap: 15px;
-        }
+    .logo span {
+      color: #e63946;
+    }
 
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
+    .nav-buttons button {
+      margin-left: 15px;
+      padding: 10px 24px;
+      border-radius: 8px;
+      border: 1px solid #e63946;
+      background: transparent;
+      color: #e63946;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
 
-        .btn-signin {
-            background: #e74c3c;
-            color: white;
-        }
+    .nav-buttons button:hover {
+      background: #e63946;
+      color: white;
+      transform: translateY(-1px);
+    }
 
-        .btn-signin:hover {
-            background: #c0392b;
-            transform: translateY(-2px);
-        }
+    /* HERO */
+    .hero {
+      padding: 180px 20px 100px;
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto;
+    }
 
-        .btn-login {
-            background: transparent;
-            border: 2px solid #3498db;
-            color: #3498db;
-        }
+    .hero h1 {
+      font-size: 3.2rem;
+      line-height: 1.2;
+      color: white;
+    }
 
-        .btn-login:hover {
-            background: #3498db;
-            color: white;
-            transform: translateY(-2px);
-        }
+    .highlight {
+      background: linear-gradient(45deg, #e63946, #f39c12);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
 
-        /* Hero Section */
-        .hero {
-            text-align: center;
-            padding: 80px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+    .hero p {
+      margin-top: 25px;
+      font-size: 1.2rem;
+      color: #c9c9c9;
+      line-height: 1.6;
+    }
 
-        .hero h1 {
-            font-size: 3.5em;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-            line-height: 1.2;
-        }
+    /* FEATURES */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 40px;
+      padding: 80px 60px;
+      max-width: 1200px;
+      margin: auto;
+    }
 
-        .hero .highlight {
-            background: linear-gradient(45deg, #e74c3c, #f39c12);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: bold;
-        }
+    .feature {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 40px 30px;
+      border-radius: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
 
-        .tagline {
-            font-size: 1.4em;
-            margin-bottom: 40px;
-            color: #ecf0f1;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
+    .feature:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-5px);
+    }
 
-        /* Responsive etc. (unchanged below) */
-        /* Features Grid */
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin: 60px 0;
-            padding: 0 20px;
-        }
+    .feature-icon {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+    }
 
-        .feature-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease;
-        }
+    .feature h3 {
+      color: #f1c40f;
+      margin-bottom: 10px;
+    }
 
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
+    .feature p {
+      color: #d1d1d1;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
 
-        .feature-icon {
-            font-size: 3em;
-            margin-bottom: 20px;
-        }
+    /* PRICING */
+    .pricing {
+      background: linear-gradient(135deg, #1b2735, #090a0f);
+      text-align: center;
+      padding: 100px 40px;
+    }
 
-        .feature-card h3 {
-            font-size: 1.5em;
-            margin-bottom: 15px;
-            color: #f1c40f;
-        }
+    .pricing h2 {
+      font-size: 2rem;
+      margin-bottom: 50px;
+    }
 
-        /* Footer omitted for brevity (same as your version) */
-    </style>
+    .price-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 40px;
+    }
+
+    .price-card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 20px;
+      padding: 40px;
+      width: 280px;
+      transition: 0.3s;
+    }
+
+    .price-card:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .price-amount {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .price-desc {
+      color: #f1c40f;
+      margin-bottom: 10px;
+    }
+
+    /* CTA */
+    .cta {
+      text-align: center;
+      padding: 100px 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    .cta h2 {
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+    }
+
+    .cta button {
+      margin-top: 30px;
+      background: linear-gradient(45deg, #e63946, #f39c12);
+      border: none;
+      padding: 15px 40px;
+      font-size: 1.1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      color: white;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .cta button:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 40px;
+      color: #777;
+      background: #0b0f14;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 700px) {
+      header {
+        padding: 20px;
+      }
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+    }
+  </style>
 </head>
 <body>
-    <!-- Header -->
-    <div class="header">
-        <div class="logo">West <span>Automotive</span> Brokerage</div>
-        <div class="auth-buttons">
-            <button class="btn btn-signin" onclick="showSignIn()">Sign Up <span class="es">Registrarse</span></button>
-            <button class="btn btn-login" onclick="showLogin()">Login <span class="es">Iniciar sesión</span></button>
-        </div>
+  <header>
+    <div class="logo">West <span>Automotive</span></div>
+    <div class="nav-buttons">
+      <button onclick="showSignIn()">Sign Up</button>
+      <button onclick="showLogin()">Login</button>
     </div>
+  </header>
 
-    <!-- Hero Section -->
-    <div class="hero">
-        <h1>You <span class="highlight">Don't Pay</span> Anything Unless You Win 
-            <br><span class="es">No pagas nada a menos que ganes</span>
-        </h1>
-        <p class="tagline">
-            Bid on your dream car with zero risk. Our expert brokers handle the auctions while you save money. 
-            <br><span class="es">Oferta por tu auto soñado sin riesgo. Nuestros expertos manejan la subasta mientras tú ahorras dinero.</span>
-        </p>
+  <section class="hero">
+    <h1>You <span class="highlight">Don’t Pay</span> Anything Unless You Win</h1>
+    <p>Bid on your dream car with zero risk. Our expert brokers handle the auction while you relax — and only pay $215 when you win.</p>
+  </section>
 
-        <!-- Features -->
-        <div class="features">
-            <div class="feature-card">
-                <div class="feature-icon">🚗</div>
-                <h3>Zero Upfront Cost <span class="es">Sin costo inicial</span></h3>
-                <p>No fees until you win the auction. Bid with confidence. 
-                    <br><span class="es">Sin tarifas hasta que ganes la subasta. Oferta con confianza.</span>
-                </p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🏆</div>
-                <h3>Expert Brokers <span class="es">Corredores expertos</span></h3>
-                <p>Professional buyers with years of auction experience.
-                    <br><span class="es">Compradores profesionales con años de experiencia en subastas.</span>
-                </p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">💳</div>
-                <h3>Secure Payments <span class="es">Pagos seguros</span></h3>
-                <p>Stripe-powered secure payment processing.
-                    <br><span class="es">Procesamiento de pagos seguro impulsado por Stripe.</span>
-                </p>
-            </div>
-        </div>
+  <section class="features">
+    <div class="feature">
+      <div class="feature-icon">🚗</div>
+      <h3>Zero Upfront Cost</h3>
+      <p>No fees until you win the auction. Bid confidently knowing there’s no risk upfront.</p>
     </div>
-
-    <!-- Pricing Section -->
-    <div class="pricing">
-        <h2>Check Out Our Competitive Prices <br><span class="es">Consulta nuestros precios competitivos</span></h2>
-        <div class="price-grid">
-            <div class="price-card">
-                <div class="price-amount">$215</div>
-                <div class="price-desc">Flat Fee Per Car <br><span class="es">Tarifa fija por vehículo</span></div>
-                <p>Only charged when you win the auction 
-                    <br><span class="es">Solo se cobra cuando ganas la subasta</span>
-                </p>
-            </div>
-            <div class="price-card featured">
-                <div class="price-amount">0%</div>
-                <div class="price-desc">Upfront Cost <br><span class="es">Costo inicial</span></div>
-                <p>No fees to start bidding 
-                    <br><span class="es">Sin tarifas para comenzar a ofertar</span>
-                </p>
-            </div>
-            <div class="price-card">
-                <div class="price-amount">10%</div>
-                <div class="price-desc">Refundable Deposit <br><span class="es">Depósito reembolsable</span></div>
-                <p>For bids over $2,500 - fully refundable if you don't win 
-                    <br><span class="es">Para ofertas superiores a $2,500 - totalmente reembolsable si no ganas</span>
-                </p>
-            </div>
-        </div>
+    <div class="feature">
+      <div class="feature-icon">🏆</div>
+      <h3>Expert Brokers</h3>
+      <p>We bid on your behalf using insider experience and proven strategies to save you thousands.</p>
     </div>
-
-    <!-- How It Works -->
-    <div class="how-it-works">
-        <h2>How It Works <br><span class="es">Cómo funciona</span></h2>
-        <div class="steps">
-            <div class="step">
-                <div class="step-number">1</div>
-                <h3>Sign Up & Verify <span class="es">Regístrate y verifica</span></h3>
-                <p>Create your account and verify your identity 
-                    <br><span class="es">Crea tu cuenta y verifica tu identidad</span>
-                </p>
-            </div>
-            <div class="step">
-                <div class="step-number">2</div>
-                <h3>Place Your Bid <span class="es">Haz tu oferta</span></h3>
-                <p>Tell us your maximum bid for the vehicle 
-                    <br><span class="es">Dinos tu oferta máxima para el vehículo</span>
-                </p>
-            </div>
-            <div class="step">
-                <div class="step-number">3</div>
-                <h3>We Bid For You <span class="es">Ofertamos por ti</span></h3>
-                <p>Our experts handle the auction process 
-                    <br><span class="es">Nuestros expertos manejan el proceso de subasta</span>
-                </p>
-            </div>
-            <div class="step">
-                <div class="step-number">4</div>
-                <h3>Drive Away <span class="es">Conduce tu nuevo auto</span></h3>
-                <p>Only pay if you win - $215 flat fee 
-                    <br><span class="es">Solo pagas si ganas - tarifa fija de $215</span>
-                </p>
-            </div>
-        </div>
+    <div class="feature">
+      <div class="feature-icon">💳</div>
+      <h3>Secure Payments</h3>
+      <p>Every payment and refund is handled safely through Stripe — transparent, fast, and secure.</p>
     </div>
+  </section>
 
-    <!-- Call to Action -->
-    <div class="cta-section">
-        <h2>Ready to Bid Risk-Free? <br><span class="es">¿Listo para ofertar sin riesgo?</span></h2>
-        <p>Join hundreds of satisfied customers who got their dream cars without the auction stress. 
-            <br><span class="es">Únete a cientos de clientes satisfechos que consiguieron su auto soñado sin el estrés de la subasta.</span>
-        </p>
-        <button class="cta-button" onclick="showSignIn()">
-            Start Bidding Today - No Upfront Cost <br><span class="es">Comienza a ofertar hoy - Sin costo inicial</span>
-        </button>
+  <section class="pricing">
+    <h2>Simple, Transparent Pricing</h2>
+    <div class="price-grid">
+      <div class="price-card">
+        <div class="price-amount">$215</div>
+        <div class="price-desc">Flat Fee Per Winning Car</div>
+        <p>Only charged when your bid wins — fully refunded if not.</p>
+      </div>
+      <div class="price-card">
+        <div class="price-amount">$0</div>
+        <div class="price-desc">Upfront Fee</div>
+        <p>Start bidding today — no hidden charges or startup fees.</p>
+      </div>
+      <div class="price-card">
+        <div class="price-amount">10%</div>
+        <div class="price-desc">Refundable Deposit</div>
+        <p>Only applies to bids over $2,500 — instantly refunded if you don’t win.</p>
+      </div>
     </div>
+  </section>
 
-    <!-- Footer -->
-    <div class="footer">
-        <p>&copy; 2024 West Automotive Brokerage LLC. All rights reserved. 
-            <br><span class="es">Todos los derechos reservados.</span>
-        </p>
-    </div>
+  <section class="cta">
+    <h2>Ready to Bid Risk-Free?</h2>
+    <p>Join hundreds of buyers who got their dream cars at auction prices — without the stress.</p>
+    <button onclick="showSignIn()">Start Bidding Now</button>
+  </section>
 
-    <script>
-        function showSignIn() {
-            alert('Sign Up form would appear here!\\n\\nWe would collect:\\n• Name, Email, Phone\\n• Address\\n• ID Verification\\n• Payment Method');
-        }
+  <footer>
+    © 2025 West Automotive Brokerage LLC — All rights reserved.
+  </footer>
 
-        function showLogin() {
-            alert('Login form would appear here!\\n\\nEmail and password login for existing users.');
-        }
-    </script>
+  <script>
+    function showSignIn() {
+      alert('Sign Up form coming soon.');
+    }
+    function showLogin() {
+      alert('Login form coming soon.');
+    }
+  </script>
 </body>
 </html>
