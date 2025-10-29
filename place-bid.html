@@ -6,44 +6,47 @@
     <title>Place Bid - West Automotive LLC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-    <link rel="stylesheet" href="style.css">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#1e40af',
-                        secondary: '#3b82f6',
-                        dark: '#0f172a',
-                        light: '#f8fafc'
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Load Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
     <style>
-        .english { color: #f8fafc; } /* light color */
-        .spanish { color: #94a3b8; } /* slate-400 color */
-        .divider { color: #475569; margin: 0 4px; } /* slate-500 color */
+        .english { color: #f8fafc; }
+        .spanish { color: #94a3b8; }
+        .divider { color: #475569; margin: 0 4px; }
+        .amount-valid { border-color: #10b981 !important; }
+        .amount-invalid { border-color: #ef4444 !important; }
+        .loading { opacity: 0.6; pointer-events: none; }
     </style>
 </head>
-<body class="bg-dark text-light">
-    <custom-navbar></custom-navbar>
-    
-    <main class="container mx-auto px-4 py-8 mt-16 max-w-4xl">
-        <div class="bg-slate-800 rounded-xl shadow-xl p-8 border border-slate-700">
+<body class="bg-gray-900 text-white">
+    <!-- Header -->
+    <div class="bg-gray-800 border-b border-gray-700">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="text-xl font-bold text-blue-400">
+                    West <span class="text-blue-300">Automotive</span> Brokerage
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-300" id="userWelcome">Welcome!</span>
+                    <a href="/" class="text-blue-400 hover:text-blue-300">Home</a>
+                    <a href="/my-bids" class="text-blue-400 hover:text-blue-300">My Bids</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="bg-gray-800 rounded-xl shadow-xl p-8 border border-gray-700">
             <div class="text-center mb-8">
-                <i data-feather="dollar-sign" class="w-16 h-16 text-primary mx-auto"></i>
-                <h1 class="text-3xl font-bold text-primary mt-4">
+                <i data-feather="dollar-sign" class="w-16 h-16 text-blue-400 mx-auto"></i>
+                <h1 class="text-3xl font-bold text-blue-400 mt-4">
                     <span class="english">Place New Bid</span>
                     <span class="divider">/</span>
                     <span class="spanish">Hacer una Oferta</span>
                 </h1>
-                <p class="mt-2">
-                    <span class="english">Enter lot details and your maximum bid amount</span>
+                <p class="mt-2 text-gray-400">
+                    <span class="english">Enter lot number and your maximum bid amount (increments of $50)</span>
                     <span class="divider">/</span>
-                    <span class="spanish">Ingrese los detalles del lote y su oferta máxima</span>
+                    <span class="spanish">Ingrese el número de lote y su oferta máxima (incrementos de $50)</span>
                 </p>
             </div>
             
@@ -51,68 +54,127 @@
                 <!-- Lot Number -->
                 <div>
                     <label for="lot-number" class="block text-sm font-medium mb-2">
-                        <span class="english text-slate-300">Lot Number</span>
+                        <span class="english text-gray-300">Lot Number *</span>
                         <span class="divider">/</span>
-                        <span class="spanish">Número de Lote</span>
+                        <span class="spanish">Número de Lote *</span>
                     </label>
                     <input type="text" id="lot-number" required 
-                           class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                           class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
                            placeholder="Enter lot number / Ingrese el número de lote">
                 </div>
+
+                <!-- Notes -->
+                <div>
+                    <label for="notes" class="block text-sm font-medium mb-2">
+                        <span class="english text-gray-300">Notes (Optional)</span>
+                        <span class="divider">/</span>
+                        <span class="spanish">Notas (Opcional)</span>
+                        <span class="text-gray-500 text-xs ml-2">25 character limit / límite de 25 caracteres</span>
+                    </label>
+                    <input type="text" id="notes" maxlength="25"
+                           class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                           placeholder="Brief notes / Notas breves">
+                    <div class="text-right mt-1">
+                        <span id="char-count" class="text-gray-500 text-sm">0/25</span>
+                    </div>
+                </div>
                 
-                <!-- Max Bid -->
+                <!-- Max Bid with $50 increments -->
                 <div>
                     <label for="max-bid" class="block text-sm font-medium mb-2">
-                        <span class="english text-slate-300">Maximum Bid Amount ($)</span>
+                        <span class="english text-gray-300">Maximum Bid Amount ($) *</span>
                         <span class="divider">/</span>
-                        <span class="spanish">Oferta Máxima ($)</span>
+                        <span class="spanish">Oferta Máxima ($) *</span>
                     </label>
-                    <input type="number" id="max-bid" min="1000" step="100" required 
-                           class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                           placeholder="Enter maximum bid / Ingrese la oferta máxima">
-                    <p class="text-sm mt-2">
-                        <span class="english text-slate-400">Note: Bids over $2,500 require a 10% refundable deposit</span>
+                    <input type="number" id="max-bid" min="1000" step="50" required 
+                           class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent amount-input"
+                           placeholder="Enter amount in $50 increments / Ingrese monto en incrementos de $50">
+                    <p class="text-sm mt-2 text-gray-400" id="amount-validation">
+                        <span class="english">Amount must be in $50 increments (e.g., $1000, $1050, $1100)</span>
                         <span class="divider">/</span>
-                        <span class="spanish">Nota: Las ofertas superiores a $2,500 requieren un depósito reembolsable del 10%</span>
+                        <span class="spanish">El monto debe ser en incrementos de $50 (ej., $1000, $1050, $1100)</span>
                     </p>
                 </div>
                 
-                <!-- Deposit Info -->
-                <div id="deposit-info" class="bg-slate-900 p-4 rounded-lg border border-slate-700 hidden">
-                    <div class="flex items-center mb-2">
-                        <i data-feather="info" class="w-5 h-5 text-secondary mr-2"></i>
-                        <h4 class="font-semibold text-secondary">
-                            <span class="english">Deposit Required</span>
+                <!-- Payment Summary -->
+                <div id="payment-summary" class="bg-gray-900 p-6 rounded-lg border border-gray-700 hidden">
+                    <div class="flex items-center mb-4">
+                        <i data-feather="credit-card" class="w-6 h-6 text-green-400 mr-2"></i>
+                        <h4 class="font-semibold text-green-400 text-lg">
+                            <span class="english">Payment Summary</span>
                             <span class="divider">/</span>
-                            <span class="spanish">Depósito Requerido</span>
+                            <span class="spanish">Resumen de Pago</span>
                         </h4>
                     </div>
-                    <p class="text-sm">
-                        <span class="english text-slate-300">Your bid qualifies for a refundable deposit of <span id="deposit-amount" class="font-semibold text-white">$0</span> (10% of your bid amount). This deposit will be refunded if you don't win the auction.</span>
-                        <br>
-                        <span class="spanish">Su oferta califica para un depósito reembolsable de <span id="deposit-amount-es" class="font-semibold text-slate-300">$0</span> (10% de su oferta). Este depósito será reembolsado si no gana la subasta.</span>
-                    </p>
+                    
+                    <div class="space-y-3">
+                        <!-- Service Fee - Always $215 -->
+                        <div class="flex justify-between items-center p-3 bg-gray-800 rounded">
+                            <div>
+                                <span class="english text-gray-300">Service Fee:</span>
+                                <span class="spanish text-gray-300">Tarifa de Servicio:</span>
+                            </div>
+                            <span class="font-bold text-white">$215.00</span>
+                        </div>
+                        
+                        <!-- Deposit - Only if over $2500 -->
+                        <div id="deposit-line" class="flex justify-between items-center p-3 bg-gray-800 rounded hidden">
+                            <div>
+                                <span class="english text-gray-300">Refundable Deposit (10%):</span>
+                                <span class="spanish text-gray-300">Depósito Reembolsable (10%):</span>
+                            </div>
+                            <span class="font-bold text-white" id="deposit-amount">$0.00</span>
+                        </div>
+                        
+                        <!-- Total -->
+                        <div class="flex justify-between items-center p-3 bg-blue-900/30 rounded border border-blue-700">
+                            <div class="font-semibold">
+                                <span class="english text-blue-300">Total to Pay:</span>
+                                <span class="spanish text-blue-300">Total a Pagar:</span>
+                            </div>
+                            <span class="font-bold text-white text-lg" id="total-amount">$215.00</span>
+                        </div>
+                    </div>
                 </div>
-                
-                <!-- Service Fee -->
-                <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
-                    <div class="flex items-center mb-2">
-                        <i data-feather="credit-card" class="w-5 h-5 text-secondary mr-2"></i>
-                        <h4 class="font-semibold text-secondary">
-                            <span class="english">Service Fee</span>
+
+                <!-- Stripe Payment Section -->
+                <div id="stripe-section" class="bg-gray-900 p-6 rounded-lg border border-gray-700 hidden">
+                    <div class="flex items-center mb-4">
+                        <i data-feather="lock" class="w-6 h-6 text-green-400 mr-2"></i>
+                        <h4 class="font-semibold text-green-400 text-lg">
+                            <span class="english">Secure Payment</span>
                             <span class="divider">/</span>
-                            <span class="spanish">Tarifa de Servicio</span>
+                            <span class="spanish">Pago Seguro</span>
                         </h4>
                     </div>
-                    <p class="text-sm">
-                        <span class="english text-slate-300">$215 flat fee per car - only charged if you win the auction</span>
-                        <br>
-                        <span class="spanish">Tarifa plana de $215 por vehículo - solo se cobra si gana la subasta</span>
-                    </p>
+                    
+                    <!-- Stripe Payment Element -->
+                    <div id="payment-element">
+                        <!-- Stripe.js will inject the Payment Element here -->
+                    </div>
+                    
+                    <!-- Submit & Payment Buttons -->
+                    <div class="text-center mt-6 space-y-4">
+                        <button type="button" id="stripe-payment-button" 
+                                class="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-lg transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-400/50 w-full">
+                            <div class="flex items-center justify-center">
+                                <i data-feather="credit-card" class="w-5 h-5 mr-2"></i>
+                                <span class="english">Pay & Submit Bid</span>
+                                <span class="divider">/</span>
+                                <span class="spanish">Pagar y Enviar Oferta</span>
+                            </div>
+                        </button>
+                        
+                        <p class="text-xs text-gray-400">
+                            <span class="english">Secure payment processed by Stripe</span>
+                            <span class="divider">/</span>
+                            <span class="spanish">Pago seguro procesado por Stripe</span>
+                        </p>
+                    </div>
                 </div>
 
                 <!-- Warning Section -->
-                <div class="bg-red-900/30 p-6 rounded-lg border border-red-700 mt-6">
+                <div class="bg-red-900/30 p-6 rounded-lg border border-red-700">
                     <div class="flex items-start mb-4">
                         <i data-feather="alert-triangle" class="w-6 h-6 text-red-400 mr-3 mt-1 flex-shrink-0"></i>
                         <div>
@@ -128,7 +190,7 @@
                             </p>
                             <div class="flex items-center">
                                 <input type="checkbox" id="acknowledge-fees" required 
-                                       class="w-4 h-4 text-primary bg-slate-700 border-slate-600 rounded focus:ring-primary focus:ring-2">
+                                       class="w-4 h-4 text-blue-400 bg-gray-700 border-gray-600 rounded focus:ring-blue-400 focus:ring-2">
                                 <label for="acknowledge-fees" class="ml-2 text-sm">
                                     <span class="english text-red-200">I acknowledge and agree</span>
                                     <span class="divider">/</span>
@@ -139,72 +201,302 @@
                     </div>
                 </div>
 
-                <!-- Submit Button -->
-                <div class="text-center pt-6">
-                    <button type="submit" 
-                            class="bg-primary hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg transition duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary/50">
-                        <div class="flex items-center justify-center">
-                            <i data-feather="check-circle" class="w-5 h-5 mr-2"></i>
-                            <span class="english">Submit Bid</span>
-                            <span class="divider">/</span>
-                            <span class="spanish">Enviar Oferta</span>
+                <!-- Status Messages -->
+                <div id="success-message" class="hidden bg-green-900/30 p-6 rounded-lg border border-green-700">
+                    <div class="flex items-center">
+                        <i data-feather="check-circle" class="w-8 h-8 text-green-400 mr-4"></i>
+                        <div>
+                            <h4 class="font-semibold text-green-400 text-xl">
+                                <span class="english">Payment Successful!</span>
+                                <span class="divider">/</span>
+                                <span class="spanish">¡Pago Exitoso!</span>
+                            </h4>
+                            <p class="text-green-200 text-sm mt-1">
+                                <span class="english">Your bid has been submitted. Redirecting to My Bids...</span>
+                                <span class="divider">/</span>
+                                <span class="spanish">Su oferta ha sido enviada. Redirigiendo a Mis Ofertas...</span>
+                            </p>
                         </div>
-                    </button>
+                    </div>
+                </div>
+
+                <div id="error-message" class="hidden bg-red-900/30 p-6 rounded-lg border border-red-700">
+                    <div class="flex items-center">
+                        <i data-feather="alert-circle" class="w-8 h-8 text-red-400 mr-4"></i>
+                        <div>
+                            <h4 class="font-semibold text-red-400 text-xl">
+                                <span class="english">Payment Failed</span>
+                                <span class="divider">/</span>
+                                <span class="spanish">Pago Fallido</span>
+                            </h4>
+                            <p id="error-text" class="text-red-200 text-sm mt-1"></p>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
-        <div class="text-center mt-12 text-sm">
+
+        <div class="text-center mt-12 text-sm text-gray-500">
             <p>
-                <span class="english text-slate-500">© 2024 West Automotive LLC. All rights reserved.</span>
-            </p>
-            <p class="mt-1">
-                <a href="home.html" class="text-secondary hover:underline">
-                    <span class="english">Return to Home</span>
-                    <span class="divider">/</span>
-                    <span class="spanish">Volver al Inicio</span>
-                </a>
-                <span class="text-slate-500 mx-2">•</span>
-                <a href="about.html" class="text-secondary hover:underline">
-                    <span class="english">About Us</span>
-                    <span class="divider">/</span>
-                    <span class="spanish">Acerca de</span>
-                </a>
+                <span class="english">© 2024 West Automotive LLC. All rights reserved.</span>
             </p>
         </div>
-</main>
+    </main>
+
     <script>
         // Initialize Feather Icons
         feather.replace();
         
-        // Deposit calculation
-        const maxBidInput = document.getElementById('max-bid');
-        const depositInfo = document.getElementById('deposit-info');
-        const depositAmount = document.getElementById('deposit-amount');
-        const depositAmountEs = document.getElementById('deposit-amount-es');
+        // Initialize Stripe
+        const stripe = Stripe('pk_live_51SNN71LU5Nmz2MpS4H45GSLdgSGgQ9877BQYcuavlohx1Fo27EFlcikhqdDLdSrXTszVX8p0hY4pCMaEppU0utrn00cVdKo3DU');
+        let elements;
+        let currentBidId = null;
 
-        maxBidInput.addEventListener('input', function() {
-            const bidAmount = parseFloat(this.value) || 0;
-            
-            if (bidAmount > 2500) {
-                const deposit = bidAmount * 0.10;
-                depositAmount.textContent = `${deposit.toFixed(2)}`;
-                depositAmountEs.textContent = `${deposit.toFixed(2)}`;
-                depositInfo.classList.remove('hidden');
-            } else {
-                depositInfo.classList.add('hidden');
-            }
+        // DOM Elements
+        const maxBidInput = document.getElementById('max-bid');
+        const paymentSummary = document.getElementById('payment-summary');
+        const depositLine = document.getElementById('deposit-line');
+        const depositAmount = document.getElementById('deposit-amount');
+        const totalAmount = document.getElementById('total-amount');
+        const stripeSection = document.getElementById('stripe-section');
+        const stripePaymentButton = document.getElementById('stripe-payment-button');
+        const successMessage = document.getElementById('success-message');
+        const errorMessage = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+
+        // Character counter for notes
+        document.getElementById('notes').addEventListener('input', function() {
+            document.getElementById('char-count').textContent = `${this.value.length}/25`;
         });
 
-        // Form submission
-        document.getElementById('bid-form').addEventListener('submit', function(e) {
-            e.preventDefault();
+        // Amount validation and payment calculation
+        maxBidInput.addEventListener('input', function() {
+            const amount = parseInt(this.value) || 0;
+            const isValid = amount >= 1000 && amount % 50 === 0;
+            
+            // Update validation UI
+            if (amount > 0) {
+                if (isValid) {
+                    this.classList.add('amount-valid');
+                    this.classList.remove('amount-invalid');
+                } else {
+                    this.classList.add('amount-invalid');
+                    this.classList.remove('amount-valid');
+                }
+            } else {
+                this.classList.remove('amount-valid', 'amount-invalid');
+            }
+            
+            // Update payment summary
+            updatePaymentSummary(amount, isValid);
+        });
+
+        function updatePaymentSummary(amount, isValid) {
+            if (amount >= 1000 && isValid) {
+                const deposit = amount > 2500 ? amount * 0.10 : 0;
+                const total = 215 + deposit;
+                
+                // Show/hide deposit line
+                if (deposit > 0) {
+                    depositLine.classList.remove('hidden');
+                    depositAmount.textContent = `$${deposit.toFixed(2)}`;
+                } else {
+                    depositLine.classList.add('hidden');
+                }
+                
+                totalAmount.textContent = `$${total.toFixed(2)}`;
+                paymentSummary.classList.remove('hidden');
+                stripeSection.classList.remove('hidden');
+            } else {
+                paymentSummary.classList.add('hidden');
+                stripeSection.classList.add('hidden');
+            }
+        }
+
+        // Stripe Payment Handler
+        stripePaymentButton.addEventListener('click', async function() {
             if (!document.getElementById('acknowledge-fees').checked) {
-                alert('Please acknowledge the additional fees notice / Por favor reconozca el aviso de tarifas adicionales');
+                alert('Please acknowledge the additional fees notice');
                 return;
             }
-            alert('Bid submitted successfully! / ¡Oferta enviada con éxito!');
-            // Here you would typically send the data to your backend
+
+            const lotNumber = document.getElementById('lot-number').value;
+            const maxBid = parseInt(maxBidInput.value);
+            const notes = document.getElementById('notes').value;
+            
+            if (!lotNumber || !maxBid || maxBid < 1000 || maxBid % 50 !== 0) {
+                alert('Please enter a valid lot number and bid amount');
+                return;
+            }
+
+            // Show loading state
+            setLoading(true);
+            hideMessages();
+
+            try {
+                // Calculate amounts
+                const deposit = maxBid > 2500 ? maxBid * 0.10 : 0;
+                const total = 215 + deposit;
+
+                // Create bid record first
+                const bidResponse = await fetch('/api/bids', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        lot_number: lotNumber,
+                        max_bid: maxBid,
+                        user_id: currentUser?.id || 'demo-user',
+                        notes: notes,
+                        deposit_amount: deposit
+                    })
+                });
+
+                const bidResult = await bidResponse.json();
+
+                if (!bidResult.success) {
+                    throw new Error(bidResult.error);
+                }
+
+                currentBidId = bidResult.bid.id;
+
+                // Create Stripe payment intent
+                const paymentResponse = await fetch('/api/create-payment-intent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: total,
+                        bid_id: currentBidId,
+                        user_id: currentUser?.id || 'demo-user',
+                        deposit_amount: deposit,
+                        service_fee: 215
+                    })
+                });
+
+                const paymentResult = await paymentResponse.json();
+
+                if (!paymentResult.success) {
+                    throw new Error(paymentResult.error);
+                }
+
+                // Initialize Stripe Elements
+                elements = stripe.elements({
+                    clientSecret: paymentResult.clientSecret,
+                    appearance: {
+                        theme: 'night',
+                        variables: {
+                            colorPrimary: '#059669',
+                            colorBackground: '#1f2937',
+                            colorText: '#f9fafb'
+                        }
+                    }
+                });
+
+                const paymentElement = elements.create('payment');
+                paymentElement.mount('#payment-element');
+
+                // Confirm payment
+                const { error } = await stripe.confirmPayment({
+                    elements,
+                    confirmParams: {
+                        return_url: `${window.location.origin}/payment-success?bid_id=${currentBidId}`,
+                    },
+                    redirect: 'if_required'
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                // If no redirect, confirm payment manually
+                const confirmResponse = await fetch('/api/confirm-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        paymentIntentId: paymentResult.paymentIntentId,
+                        bid_id: currentBidId
+                    })
+                });
+
+                const confirmResult = await confirmResponse.json();
+
+                if (confirmResult.success) {
+                    showSuccess();
+                    // Auto-redirect to my-bids after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = '/my-bids';
+                    }, 3000);
+                } else {
+                    throw new Error(confirmResult.error);
+                }
+
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                setLoading(false);
+            }
         });
+
+        // Utility functions
+        function setLoading(loading) {
+            if (loading) {
+                document.getElementById('bid-form').classList.add('loading');
+                stripePaymentButton.disabled = true;
+                stripePaymentButton.innerHTML = `
+                    <div class="flex items-center justify-center">
+                        <i data-feather="loader" class="w-5 h-5 mr-2 animate-spin"></i>
+                        <span class="english">Processing Payment...</span>
+                        <span class="divider">/</span>
+                        <span class="spanish">Procesando Pago...</span>
+                    </div>
+                `;
+            } else {
+                document.getElementById('bid-form').classList.remove('loading');
+                stripePaymentButton.disabled = false;
+                stripePaymentButton.innerHTML = `
+                    <div class="flex items-center justify-center">
+                        <i data-feather="credit-card" class="w-5 h-5 mr-2"></i>
+                        <span class="english">Pay & Submit Bid</span>
+                        <span class="divider">/</span>
+                        <span class="spanish">Pagar y Enviar Oferta</span>
+                    </div>
+                `;
+            }
+            feather.replace();
+        }
+
+        function showSuccess() {
+            hideMessages();
+            successMessage.classList.remove('hidden');
+        }
+
+        function showError(message) {
+            hideMessages();
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+
+        function hideMessages() {
+            successMessage.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+        }
+
+        // Check for payment success in URL
+        function checkPaymentStatus() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const paymentSuccess = urlParams.get('payment_success');
+            
+            if (paymentSuccess === 'true') {
+                showSuccess();
+                setTimeout(() => {
+                    window.location.href = '/my-bids';
+                }, 3000);
+            }
+        }
+
+        // Initialize
+        const currentUser = { id: 'demo-user-id', full_name: 'Demo User' };
+        document.getElementById('userWelcome').textContent = `Welcome, ${currentUser.full_name}`;
+        checkPaymentStatus();
     </script>
 </body>
 </html>
