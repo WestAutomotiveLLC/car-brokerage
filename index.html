@@ -56,6 +56,13 @@
             transform: rotate(180deg);
             transition: transform 0.5s ease;
         }
+
+        /* Language Selector */
+        .language-selector {
+            position: absolute;
+            top: 15px;
+            right: 120px;
+        }
     </style>
 </head>
 <body>
@@ -65,7 +72,18 @@
             <a class="navbar-brand" href="/">
                 <i class="fas fa-car"></i> West Automotive LLC
             </a>
+            
+            <!-- Language Selector -->
+            <div class="language-selector">
+                <select id="languageSelect" class="form-select form-select-sm">
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="fr">Français</option>
+                </select>
+            </div>
+
             <div class="navbar-nav ms-auto">
+                <!-- Login/Signup buttons will be added here by JavaScript -->
                 <a class="nav-link" href="/place-bid">Place Bid</a>
                 <a class="nav-link" href="/my-bids">My Bids</a>
             </div>
@@ -75,10 +93,10 @@
     <!-- Hero Section -->
     <section class="hero-section">
         <div class="container">
-            <h1 class="display-4 fw-bold">Professional Car Brokerage Services</h1>
-            <p class="lead mb-4">Bid on auction vehicles with expert guidance and competitive pricing</p>
+            <h1 class="display-4 fw-bold" data-i18n="hero_title">Professional Car Brokerage Services</h1>
+            <p class="lead mb-4" data-i18n="hero_subtitle">Bid on auction vehicles with expert guidance and competitive pricing</p>
             <a href="/place-bid" class="btn btn-light btn-lg">
-                <i class="fas fa-gavel"></i> Place Your Bid
+                <i class="fas fa-gavel"></i> <span data-i18n="hero_button">Place Your Bid</span>
             </a>
         </div>
     </section>
@@ -91,22 +109,22 @@
                     <div class="feature-icon">
                         <i class="fas fa-shield-alt"></i>
                     </div>
-                    <h4>Secure Bidding</h4>
-                    <p>Protected deposits and secure payment processing</p>
+                    <h4 data-i18n="feature1_title">Secure Bidding</h4>
+                    <p data-i18n="feature1_desc">Protected deposits and secure payment processing</p>
                 </div>
                 <div class="col-md-4 mb-4">
                     <div class="feature-icon">
                         <i class="fas fa-tag"></i>
                     </div>
-                    <h4>Competitive Fees</h4>
-                    <p>Low service fees with deposit refunds for unsuccessful bids</p>
+                    <h4 data-i18n="feature2_title">Competitive Fees</h4>
+                    <p data-i18n="feature2_desc">Low service fees with deposit refunds for unsuccessful bids</p>
                 </div>
                 <div class="col-md-4 mb-4">
                     <div class="feature-icon">
                         <i class="fas fa-headset"></i>
                     </div>
-                    <h4>Expert Support</h4>
-                    <p>Professional guidance throughout the bidding process</p>
+                    <h4 data-i18n="feature3_title">Expert Support</h4>
+                    <p data-i18n="feature3_desc">Professional guidance throughout the bidding process</p>
                 </div>
             </div>
         </div>
@@ -115,35 +133,35 @@
     <!-- How It Works -->
     <section class="bg-light py-5">
         <div class="container">
-            <h2 class="text-center mb-5">How It Works</h2>
+            <h2 class="text-center mb-5" data-i18n="how_it_works_title">How It Works</h2>
             <div class="row">
                 <div class="col-md-3 text-center mb-4">
                     <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
                         <i class="fas fa-user-plus fa-2x"></i>
                     </div>
-                    <h5 class="mt-3">1. Register</h5>
-                    <p>Create your account in seconds</p>
+                    <h5 class="mt-3" data-i18n="step1_title">1. Register</h5>
+                    <p data-i18n="step1_desc">Create your account in seconds</p>
                 </div>
                 <div class="col-md-3 text-center mb-4">
                     <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
                         <i class="fas fa-search fa-2x"></i>
                     </div>
-                    <h5 class="mt-3">2. Find Vehicle</h5>
-                    <p>Provide the auction lot number</p>
+                    <h5 class="mt-3" data-i18n="step2_title">2. Find Vehicle</h5>
+                    <p data-i18n="step2_desc">Provide the auction lot number</p>
                 </div>
                 <div class="col-md-3 text-center mb-4">
                     <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
                         <i class="fas fa-gavel fa-2x"></i>
                     </div>
-                    <h5 class="mt-3">3. Place Bid</h5>
-                    <p>Set your maximum bid amount</p>
+                    <h5 class="mt-3" data-i18n="step3_title">3. Place Bid</h5>
+                    <p data-i18n="step3_desc">Set your maximum bid amount</p>
                 </div>
                 <div class="col-md-3 text-center mb-4">
                     <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
                         <i class="fas fa-trophy fa-2x"></i>
                     </div>
-                    <h5 class="mt-3">4. Win & Save</h5>
-                    <p>Get your vehicle at the best price</p>
+                    <h5 class="mt-3" data-i18n="step4_title">4. Win & Save</h5>
+                    <p data-i18n="step4_desc">Get your vehicle at the best price</p>
                 </div>
             </div>
         </div>
@@ -152,10 +170,10 @@
     <!-- CTA Section -->
     <section class="py-5">
         <div class="container text-center">
-            <h2>Ready to Get Started?</h2>
-            <p class="lead mb-4">Join hundreds of satisfied customers who've found their perfect vehicle through our brokerage service.</p>
+            <h2 data-i18n="cta_title">Ready to Get Started?</h2>
+            <p class="lead mb-4" data-i18n="cta_subtitle">Join hundreds of satisfied customers who've found their perfect vehicle through our brokerage service.</p>
             <a href="/place-bid" class="btn btn-primary btn-lg">
-                <i class="fas fa-rocket"></i> Start Bidding Today
+                <i class="fas fa-rocket"></i> <span data-i18n="cta_button">Start Bidding Today</span>
             </a>
         </div>
     </section>
@@ -163,8 +181,8 @@
     <!-- Footer -->
     <footer class="bg-dark text-white py-4">
         <div class="container text-center">
-            <p>&copy; 2024 West Automotive LLC. All rights reserved.</p>
-            <p class="mb-0">Professional Car Brokerage Services</p>
+            <p>&copy; 2024 West Automotive LLC. <span data-i18n="footer_rights">All rights reserved.</span></p>
+            <p class="mb-0" data-i18n="footer_tagline">Professional Car Brokerage Services</p>
         </div>
     </footer>
 
@@ -174,28 +192,175 @@
     </a>
 
     <script>
-        // Check if user is logged in and update navigation
-        $(document).ready(function() {
-            checkAuthStatus();
-        });
+        // Language translations
+        const translations = {
+            en: {
+                hero_title: "Professional Car Brokerage Services",
+                hero_subtitle: "Bid on auction vehicles with expert guidance and competitive pricing",
+                hero_button: "Place Your Bid",
+                feature1_title: "Secure Bidding",
+                feature1_desc: "Protected deposits and secure payment processing",
+                feature2_title: "Competitive Fees",
+                feature2_desc: "Low service fees with deposit refunds for unsuccessful bids",
+                feature3_title: "Expert Support",
+                feature3_desc: "Professional guidance throughout the bidding process",
+                how_it_works_title: "How It Works",
+                step1_title: "1. Register",
+                step1_desc: "Create your account in seconds",
+                step2_title: "2. Find Vehicle",
+                step2_desc: "Provide the auction lot number",
+                step3_title: "3. Place Bid",
+                step3_desc: "Set your maximum bid amount",
+                step4_title: "4. Win & Save",
+                step4_desc: "Get your vehicle at the best price",
+                cta_title: "Ready to Get Started?",
+                cta_subtitle: "Join hundreds of satisfied customers who've found their perfect vehicle through our brokerage service.",
+                cta_button: "Start Bidding Today",
+                footer_rights: "All rights reserved.",
+                footer_tagline: "Professional Car Brokerage Services",
+                login: "Login",
+                signup: "Sign Up",
+                welcome: "Welcome",
+                logout: "Logout"
+            },
+            es: {
+                hero_title: "Servicios Profesionales de Corretaje de Autos",
+                hero_subtitle: "Oferte en vehículos de subasta con orientación experta y precios competitivos",
+                hero_button: "Hacer Una Oferta",
+                feature1_title: "Ofertas Seguras",
+                feature1_desc: "Depósitos protegidos y procesamiento de pagos seguro",
+                feature2_title: "Tarifas Competitivas",
+                feature2_desc: "Bajas tarifas de servicio con reembolsos de depósito para ofertas no exitosas",
+                feature3_title: "Soporte Experto",
+                feature3_desc: "Orientación profesional durante todo el proceso de ofertas",
+                how_it_works_title: "Cómo Funciona",
+                step1_title: "1. Registrarse",
+                step1_desc: "Crea tu cuenta en segundos",
+                step2_title: "2. Encontrar Vehículo",
+                step2_desc: "Proporcione el número de lote de subasta",
+                step3_title: "3. Hacer Oferta",
+                step3_desc: "Establezca su monto de oferta máxima",
+                step4_title: "4. Ganar y Ahorrar",
+                step4_desc: "Obtenga su vehículo al mejor precio",
+                cta_title: "¿Listo para Comenzar?",
+                cta_subtitle: "Únase a cientos de clientes satisfechos que han encontrado su vehículo perfecto a través de nuestro servicio de corretaje.",
+                cta_button: "Comenzar a Ofertar Hoy",
+                footer_rights: "Todos los derechos reservados.",
+                footer_tagline: "Servicios Profesionales de Corretaje de Autos",
+                login: "Iniciar Sesión",
+                signup: "Registrarse",
+                welcome: "Bienvenido",
+                logout: "Cerrar Sesión"
+            },
+            fr: {
+                hero_title: "Services Professionnels de Courtage Automobile",
+                hero_subtitle: "Enchérissez sur des véhicules aux enchères avec des conseils d'experts et des prix compétitifs",
+                hero_button: "Faire une Offre",
+                feature1_title: "Enchères Sécurisées",
+                feature1_desc: "Dépôts protégés et traitement de paiement sécurisé",
+                feature2_title: "Frais Compétitifs",
+                feature2_desc: "Faibles frais de service avec remboursements des dépôts pour les offres infructueuses",
+                feature3_title: "Support Expert",
+                feature3_desc: "Conseils professionnels tout au long du processus d'enchères",
+                how_it_works_title: "Comment ça Marche",
+                step1_title: "1. S'Inscrire",
+                step1_desc: "Créez votre compte en quelques secondes",
+                step2_title: "2. Trouver un Véhicule",
+                step2_desc: "Fournissez le numéro de lot des enchères",
+                step3_title: "3. Faire une Offre",
+                step3_desc: "Définissez votre montant d'offre maximum",
+                step4_title: "4. Gagner et Économiser",
+                step4_desc: "Obtenez votre véhicule au meilleur prix",
+                cta_title: "Prêt à Commencer?",
+                cta_subtitle: "Rejoignez des centaines de clients satisfaits qui ont trouvé leur véhicule parfait grâce à notre service de courtage.",
+                cta_button: "Commencer les Enchères Aujourd'hui",
+                footer_rights: "Tous droits réservés.",
+                footer_tagline: "Services Professionnels de Courtage Automobile",
+                login: "Connexion",
+                signup: "S'Inscrire",
+                welcome: "Bienvenue",
+                logout: "Déconnexion"
+            }
+        };
 
+        // Language switching function
+        function switchLanguage(lang) {
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+            localStorage.setItem('preferredLanguage', lang);
+        }
+
+        // Check auth status and update navigation
         async function checkAuthStatus() {
             try {
                 const response = await fetch('/api/auth/status');
                 const data = await response.json();
                 
+                const nav = document.querySelector('.navbar-nav');
+                
                 if (data.loggedIn) {
-                    // User is logged in, update navigation
-                    $('.navbar-nav').prepend(`
+                    // User is logged in
+                    nav.innerHTML = `
                         <span class="nav-link text-warning">
-                            <i class="fas fa-user"></i> Welcome, ${data.user.email}
+                            <i class="fas fa-user"></i> ${data.user.email}
                         </span>
-                    `);
+                        <a class="nav-link" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> <span data-i18n="logout">Logout</span>
+                        </a>
+                        <a class="nav-link" href="/place-bid">Place Bid</a>
+                        <a class="nav-link" href="/my-bids">My Bids</a>
+                    `;
+                } else {
+                    // User is not logged in
+                    nav.innerHTML = `
+                        <a class="nav-link" href="/login">
+                            <i class="fas fa-sign-in-alt"></i> <span data-i18n="login">Login</span>
+                        </a>
+                        <a class="nav-link" href="/register">
+                            <i class="fas fa-user-plus"></i> <span data-i18n="signup">Sign Up</span>
+                        </a>
+                        <a class="nav-link" href="/place-bid">Place Bid</a>
+                        <a class="nav-link" href="/my-bids">My Bids</a>
+                    `;
                 }
+                
+                // Apply language after navigation is updated
+                const savedLang = localStorage.getItem('preferredLanguage') || 'en';
+                document.getElementById('languageSelect').value = savedLang;
+                switchLanguage(savedLang);
+                
             } catch (error) {
                 console.log('Not logged in or error checking auth status');
+                // Apply default language
+                const savedLang = localStorage.getItem('preferredLanguage') || 'en';
+                document.getElementById('languageSelect').value = savedLang;
+                switchLanguage(savedLang);
             }
         }
+
+        // Logout function
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+            
+            // Language selector event
+            document.getElementById('languageSelect').addEventListener('change', function(e) {
+                switchLanguage(e.target.value);
+            });
+        });
     </script>
 </body>
 </html>
