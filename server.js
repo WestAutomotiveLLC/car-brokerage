@@ -555,6 +555,16 @@ app.get('/my-bids', (req, res) => {
   res.sendFile(path.join(__dirname, 'my-bids.html'));
 });
 
+// Login page
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+// Register page  
+app.get('/register', (req, res) => {
+  res.sendFile(path.join(__dirname, 'signup.html'));
+});
+
 // Admin login page
 app.get('/admin-login', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin-login.html'));
@@ -563,6 +573,23 @@ app.get('/admin-login', (req, res) => {
 // Admin dashboard
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+// Other existing pages
+app.get('/about', (req, res) => {
+  res.sendFile(path.join(__dirname, 'about.html'));
+});
+
+app.get('/contact', (req, res) => {
+  res.sendFile(path.join(__dirname, 'contact.html'));
+});
+
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+app.get('/home', (req, res) => {
+  res.sendFile(path.join(__dirname, 'home.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
