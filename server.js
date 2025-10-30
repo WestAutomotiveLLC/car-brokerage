@@ -28,49 +28,54 @@ console.log('💳 Stripe connected:', process.env.STRIPE_SECRET_KEY ? 'Yes' : 'N
 console.log('📁 Current directory:', __dirname);
 console.log('🌐 Live at: https://car-brokerage.onrender.com');
 
-// Simple memory store for sessions
+// Simple memory store for sessions (fixed version)
 class SimpleMemoryStore {
   constructor() {
     this.sessions = new Map();
-    this.startCleanup();
   }
 
   get(sid, callback) {
-    callback(null, this.sessions.get(sid));
+    process.nextTick(() => {
+      callback(null, this.sessions.get(sid) || null);
+    });
   }
 
   set(sid, session, callback) {
-    this.sessions.set(sid, session);
-    callback(null);
+    process.nextTick(() => {
+      this.sessions.set(sid, session);
+      callback(null);
+    });
   }
 
   destroy(sid, callback) {
-    this.sessions.delete(sid);
-    callback(null);
+    process.nextTick(() => {
+      this.sessions.delete(sid);
+      callback(null);
+    });
   }
 
-  startCleanup() {
-    setInterval(() => {
-      const now = Date.now();
-      for (const [sid, session] of this.sessions.entries()) {
-        if (session.cookie && session.cookie.expires && new Date(session.cookie.expires) < new Date(now)) {
-          this.sessions.delete(sid);
-        }
-      }
-    }, 60 * 60 * 1000);
+  // Add the required methods to avoid errors
+  touch(sid, session, callback) {
+    process.nextTick(() => {
+      callback(null);
+    });
+  }
+
+  // Add empty on method to satisfy express-session
+  on() {
+    return this;
   }
 }
 
 const memoryStore = new SimpleMemoryStore();
 
-// Session middleware
+// Session middleware (simplified - remove store for now to fix error)
 app.use(session({
   secret: process.env.FLASK_SECRET_KEY || 'car-brokerage-secret-123',
   resave: false,
   saveUninitialized: false,
-  store: memoryStore,
   cookie: { 
-    maxAge: 60 * 60 * 1000,
+    maxAge: 60 * 60 * 1000, // 1 hour
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true
   }
