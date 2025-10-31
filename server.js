@@ -105,11 +105,10 @@ app.get('/api/auth/status', (req, res) => {
   });
 });
 
-// Create a new bid
+// Create a new bid - NO LOGIN REQUIRED
 app.post('/api/bids', async (req, res) => {
   try {
-    const { lot_number, max_bid } = req.body;
-    const user_id = req.session.user.id;
+    const { lot_number, max_bid, user_id } = req.body;
     
     const deposit_amount = max_bid > 2500 ? max_bid * 0.10 : 0;
     const service_fee = 215;
@@ -119,7 +118,7 @@ app.post('/api/bids', async (req, res) => {
       .from('bids')
       .insert([
         { 
-          user_id: user_id,
+          user_id: user_id || 'guest-user',
           lot_number, 
           max_bid: parseFloat(max_bid), 
           deposit_amount: parseFloat(deposit_amount),
@@ -155,11 +154,10 @@ app.post('/api/bids', async (req, res) => {
   }
 });
 
-// Create Stripe payment intent
-app.post('/api/create-payment-intent', requireAuth, async (req, res) => {
+// Create Stripe payment intent - NO LOGIN REQUIRED
+app.post('/api/create-payment-intent', async (req, res) => {
   try {
-    const { amount, bid_id, lot_number } = req.body;
-    const user_id = req.session.user.id;
+    const { amount, bid_id, lot_number, user_id } = req.body;
     
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100),
@@ -169,7 +167,7 @@ app.post('/api/create-payment-intent', requireAuth, async (req, res) => {
       },
       metadata: {
         bid_id: bid_id,
-        user_id: user_id,
+        user_id: user_id || 'guest',
         lot_number: lot_number,
         payment_type: 'bid_payment'
       }
@@ -197,8 +195,8 @@ app.post('/api/create-payment-intent', requireAuth, async (req, res) => {
   }
 });
 
-// Confirm payment and update bid
-app.post('/api/confirm-payment', requireAuth, async (req, res) => {
+// Confirm payment and update bid - NO LOGIN REQUIRED
+app.post('/api/confirm-payment', async (req, res) => {
   try {
     const { paymentIntentId, bid_id } = req.body;
     
@@ -546,10 +544,10 @@ app.get('/home', (req, res) => {
   res.sendFile(path.join(__dirname, 'home.html'));
 });
 
-// Serve global language file
-app.get('/global-language.js', (req, res) => {
-  res.sendFile(path.join(__dirname, 'global-language.js'));
-});
+// Remove global-language.js route since file doesn't exist
+// app.get('/global-language.js', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'global-language.js'));
+// });
 
 // SERVER START
 app.listen(PORT, '0.0.0.0', () => {
