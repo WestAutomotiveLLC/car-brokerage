@@ -592,7 +592,14 @@ app.get('/home', (req, res) => {
   res.sendFile(path.join(__dirname, 'home.html'));
 });
 
+// ... all your other routes ...
+
+// Serve global language file - ADD THIS AT THE BOTTOM
+app.get('/global-language.js', (req, res) => {
+  res.sendFile(path.join(__dirname, 'global-language.js'));
+});
+
+// This should be your LAST line
 app.listen(PORT, '0.0.0.0', () => {
   console.log('✅ Server started successfully!');
-  console.log('🌐 Live at: https://car-brokerage.onrender.com');
 });
