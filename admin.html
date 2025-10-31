@@ -349,5 +349,32 @@
             setInterval(loadAdminData, 30000);
         });
     </script>
-</body>
-</html>
+<script>
+// Check admin login
+if (sessionStorage.getItem('adminLoggedIn') !== 'true') {
+    window.location.href = '/admin-login';
+}
+
+// Add logout functionality
+function adminLogout() {
+    fetch('/api/admin/logout', { method: 'POST' })
+        .then(() => {
+            sessionStorage.removeItem('adminLoggedIn');
+            window.location.href = '/admin-login';
+        });
+}
+
+// Add logout button to admin header (optional)
+document.addEventListener('DOMContentLoaded', function() {
+    const header = document.querySelector('.bg-dark');
+    if (header) {
+        header.innerHTML += `
+            <div class="col-auto">
+                <button class="btn btn-outline-light btn-sm" onclick="adminLogout()">
+                    <i class="fas fa-sign-out-alt"></i> Admin Logout
+                </button>
+            </div>
+        `;
+    }
+});
+</script>
