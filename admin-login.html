@@ -127,5 +127,37 @@
             }
         });
     </script>
-</body>
-</html>
+<script>
+$(document).ready(function() {
+    $('#adminLoginForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const username = $('#username').val();
+        const password = $('#password').val();
+        
+        fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username, password: password })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                window.location.href = '/admin';
+            } else {
+                alert('Invalid username or password. Please try again.');
+                $('#password').val('');
+            }
+        })
+        .catch(error => {
+            console.error('Login error:', error);
+            alert('Login failed. Please try again.');
+        });
+    });
+
+    if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+        window.location.href = '/admin';
+    }
+});
+</script>
