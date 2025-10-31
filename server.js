@@ -13,6 +13,9 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
+console.log('✅ Supabase client initialized');
+console.log('💳 Stripe client initialized');
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -37,6 +40,14 @@ const requireAuth = (req, res, next) => {
   next();
 };
 
+// Admin middleware
+const requireAdmin = (req, res, next) => {
+  if (!req.session.user || req.session.user.email !== 'admin@westauto.com') {
+    return res.status(403).json({ error: 'Admin access only' });
+  }
+  next();
+};
+
 // Routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -50,10 +61,7 @@ app.get('/my-bids', requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'my-bids.html'));
 });
 
-app.get('/admin', requireAuth, (req, res) => {
-  if (req.session.user.email !== 'admin@westauto.com') {
-    return res.status(403).json({ error: 'Admin access only' });
-  }
+app.get('/admin', requireAuth, requireAdmin, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
@@ -202,12 +210,8 @@ app.get('/api/bids', requireAuth, async (req, res) => {
   }
 });
 
-app.get('/api/all-bids', requireAuth, async (req, res) => {
+app.get('/api/all-bids', requireAuth, requireAdmin, async (req, res) => {
   try {
-    if (req.session.user.email !== 'admin@westauto.com') {
-      return res.status(403).json({ error: 'Admin access only' });
-    }
-
     const { data, error } = await supabase
       .from('bids')
       .select(`
@@ -248,7 +252,7 @@ app.post('/create-payment-intent', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/update-bid-status', requireAuth, async (req, res) => {
+app.post('/update-bid-status', requireAuth, requireAdmin, async (req, res) => {
   try {
     const { bidId, status } = req.body;
     
