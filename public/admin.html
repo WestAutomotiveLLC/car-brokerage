@@ -1,1 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - West Automotive LLC</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-car"></i> West Automotive LLC - Admin
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Home</a>
+            </div>
+        </div>
+    </nav>
 
+    <div class="container mt-5">
+        <h2>Admin Panel - All Bids</h2>
+        <div id="adminBidsList" class="mt-4">
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p>Loading all bids...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function loadAllBids() {
+            try {
+                const response = await fetch('/api/all-bids');
+                if (response.ok) {
+                    const data = await response.json();
+                    displayAllBids(data.bids);
+                } else {
+                    document.getElementById('adminBidsList').innerHTML = `
+                        <div class="alert alert-danger">
+                            Access denied. Admin privileges required.
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('adminBidsList').innerHTML = `
+                    <div class="alert alert-danger">
+                        Error loading bids: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function displayAllBids(bids) {
+            const bidsList = document.getElementById('adminBidsList');
+            
+            if (!bids || bids.length === 0) {
+                bidsList.innerHTML = `
+                    <div class="alert alert-info">
+                        No bids found in the system.
+                    </div>
+                `;
+                return;
+            }
+
+            bidsList.innerHTML = bids.map(bid => `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h5 class="card-title">${bid.vehicle}</h5>
+                                <p class="card-text"><strong>Bid Amount:</strong> $${bid.bid_amount}</p>
+                                <p class="card-text"><strong>User:</strong> ${bid.profiles?.first_name} ${bid.profiles?.last_name}</p>
+                                <p class="card-text"><strong>Email:</strong> ${bid.profiles?.email}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="card-text"><strong>Status:</strong> 
+                                    <span class="badge bg-${getStatusColor(bid.status)}">${bid.status}</span>
+                                </p>
+                                <p class="card-text"><strong>Date:</strong> ${new Date(bid.created_at).toLocaleDateString()}</p>
+                                ${bid.comments ? `<p class="card-text"><strong>Comments:</strong> ${bid.comments}</p>` : ''}
+                            </div>
+                            <div class="col-md-4">
+                                <div class="btn-group">
+                                    <button class="btn btn-success btn-sm" onclick="updateBidStatus(${bid.id}, 'approved')">
+                                        Approve
+                                    </button>
+                                    <button class="btn btn-warning btn-sm" onclick="updateBidStatus(${bid.id}, 'pending')">
+                                        Pending
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="updateBidStatus(${bid.id}, 'rejected')">
+                                        Reject
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function updateBidStatus(bidId, status) {
+            try {
+                const response = await fetch('/update-bid-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bidId, status })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`Bid ${status} successfully!`);
+                    loadAllBids(); // Reload the bids
+                } else {
+                    alert('Error updating bid: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error updating bid status: ' + error.message);
+            }
+        }
+
+        function getStatusColor(status) {
+            switch(status) {
+                case 'approved': return 'success';
+                case 'rejected': return 'danger';
+                case 'pending': return 'warning';
+                default: return 'secondary';
+            }
+        }
+
+        // Load all bids when page loads
+        loadAllBids();
+    </script>
+</body>
+</html>
