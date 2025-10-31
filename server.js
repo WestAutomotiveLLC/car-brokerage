@@ -106,7 +106,7 @@ app.get('/api/auth/status', (req, res) => {
 });
 
 // Create a new bid
-app.post('/api/bids', requireAuth, async (req, res) => {
+app.post('/api/bids', async (req, res) => {
   try {
     const { lot_number, max_bid } = req.body;
     const user_id = req.session.user.id;
