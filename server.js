@@ -159,7 +159,7 @@ app.post('/api/bids', requireAuth, async (req, res) => {
       .from('bids')
       .insert([
         {
-          user_id: req.session.user.id, // This now matches Supabase Auth UUID
+          user_id: req.session.user.id,
           vehicle: vehicle,
           bid_amount: parseFloat(bid_amount),
           comments: comments,
@@ -212,7 +212,7 @@ app.get('/api/all-bids', requireAuth, async (req, res) => {
       .from('bids')
       .select(`
         *,
-        profiles:user_id (email, first_name, last_name, phone)
+        profiles (email, first_name, last_name, phone)
       `)
       .order('created_at', { ascending: false });
 
@@ -231,7 +231,7 @@ app.post('/create-payment-intent', requireAuth, async (req, res) => {
     const { amount, bidId } = req.body;
     
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
+      amount: Math.round(amount * 100),
       currency: 'usd',
       metadata: {
         bid_id: bidId,
@@ -269,6 +269,15 @@ app.post('/update-bid-status', requireAuth, async (req, res) => {
     console.error('Bid status update error:', error);
     res.status(500).json({ error: 'Failed to update bid status' });
   }
+});
+
+// Health check
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    session: !!req.session.user 
+  });
 });
 
 app.listen(PORT, () => {
