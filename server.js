@@ -3,9 +3,10 @@ const session = require('express-session');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { createClient } = require('@supabase/supabase-js');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 
 // Supabase client
 const supabase = createClient(
@@ -16,10 +17,17 @@ const supabase = createClient(
 console.log('✅ Supabase client initialized');
 console.log('💳 Stripe client initialized');
 
+// Check if public directory exists, create basic files if not
+const publicDir = path.join(__dirname, 'public');
+if (!fs.existsSync(publicDir)) {
+  console.log('⚠️  Public directory not found, creating...');
+  fs.mkdirSync(publicDir, { recursive: true });
+}
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
+app.use(express.static(publicDir));
 
 // Session configuration
 app.use(session({
@@ -48,24 +56,126 @@ const requireAdmin = (req, res, next) => {
   next();
 };
 
-// Routes
+// Serve basic HTML if files are missing
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    // Fallback basic HTML
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>West Automotive LLC</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+      </head>
+      <body>
+        <nav class="navbar navbar-dark bg-dark">
+          <div class="container">
+            <a class="navbar-brand" href="/">West Automotive LLC</a>
+          </div>
+        </nav>
+        <div class="container mt-5">
+          <h1>Welcome to West Automotive LLC</h1>
+          <p>Car Brokerage Platform</p>
+          <a href="/place-bid" class="btn btn-primary">Place Bid</a>
+          <a href="/my-bids" class="btn btn-secondary">My Bids</a>
+        </div>
+      </body>
+      </html>
+    `);
+  }
 });
 
 app.get('/place-bid', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'place-bid.html'));
+  const filePath = path.join(__dirname, 'public', 'place-bid.html');
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Place Bid - West Automotive LLC</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+      </head>
+      <body>
+        <nav class="navbar navbar-dark bg-dark">
+          <div class="container">
+            <a class="navbar-brand" href="/">West Automotive LLC</a>
+          </div>
+        </nav>
+        <div class="container mt-5">
+          <h2>Place a Bid</h2>
+          <p>Bid functionality coming soon...</p>
+          <a href="/" class="btn btn-secondary">Back to Home</a>
+        </div>
+      </body>
+      </html>
+    `);
+  }
 });
 
 app.get('/my-bids', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'my-bids.html'));
+  const filePath = path.join(__dirname, 'public', 'my-bids.html');
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>My Bids - West Automotive LLC</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+      </head>
+      <body>
+        <nav class="navbar navbar-dark bg-dark">
+          <div class="container">
+            <a class="navbar-brand" href="/">West Automotive LLC</a>
+          </div>
+        </nav>
+        <div class="container mt-5">
+          <h2>My Bids</h2>
+          <p>Bid management coming soon...</p>
+          <a href="/" class="btn btn-secondary">Back to Home</a>
+        </div>
+      </body>
+      </html>
+    `);
+  }
 });
 
 app.get('/admin', requireAuth, requireAdmin, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+  const filePath = path.join(__dirname, 'public', 'admin.html');
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Admin - West Automotive LLC</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+      </head>
+      <body>
+        <nav class="navbar navbar-dark bg-dark">
+          <div class="container">
+            <a class="navbar-brand" href="/">West Automotive LLC - Admin</a>
+          </div>
+        </nav>
+        <div class="container mt-5">
+          <h2>Admin Panel</h2>
+          <p>Admin functionality coming soon...</p>
+          <a href="/" class="btn btn-secondary">Back to Home</a>
+        </div>
+      </body>
+      </html>
+    `);
+  }
 });
 
-// Auth routes
+// Auth routes (keep your existing auth routes)
 app.post('/auth/register', async (req, res) => {
   try {
     const { email, password, firstName, lastName, phone } = req.body;
@@ -158,7 +268,7 @@ app.get('/auth/user', (req, res) => {
   }
 });
 
-// Bid routes
+// Bid routes (keep your existing bid routes)
 app.post('/api/bids', requireAuth, async (req, res) => {
   try {
     const { vehicle, bid_amount, comments } = req.body;
@@ -226,52 +336,6 @@ app.get('/api/all-bids', requireAuth, requireAdmin, async (req, res) => {
   } catch (error) {
     console.error('All bids fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch bids' });
-  }
-});
-
-// Payment routes
-app.post('/create-payment-intent', requireAuth, async (req, res) => {
-  try {
-    const { amount, bidId } = req.body;
-    
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100),
-      currency: 'usd',
-      metadata: {
-        bid_id: bidId,
-        user_id: req.session.user.id
-      }
-    });
-
-    res.json({
-      clientSecret: paymentIntent.client_secret
-    });
-  } catch (error) {
-    console.error('Payment intent error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/update-bid-status', requireAuth, requireAdmin, async (req, res) => {
-  try {
-    const { bidId, status } = req.body;
-    
-    const { data, error } = await supabase
-      .from('bids')
-      .update({ status: status })
-      .eq('id', bidId)
-      .select();
-
-    if (error) throw error;
-
-    res.json({ 
-      success: true, 
-      message: `Bid ${status} successfully`,
-      bid: data[0]
-    });
-  } catch (error) {
-    console.error('Bid status update error:', error);
-    res.status(500).json({ error: 'Failed to update bid status' });
   }
 });
 
